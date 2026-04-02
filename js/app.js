@@ -630,9 +630,9 @@ function showSection(sectionName) {
         AppState.currentSection = sectionName;
     }
 
-    if (sectionName === 'games' && AppState.games.length === 0) {
+    if (sectionName === 'games') {
         renderGames();
-    } else if (sectionName === 'dlc' && AppState.dlc.length === 0) {
+    } else if (sectionName === 'dlc') {
         renderDlc();
     } else if (sectionName === 'apps' && AppState.apps.length === 0) {
         renderApps();
@@ -746,12 +746,40 @@ function renderRecentHomebrew() {
     container.innerHTML = recent.map(hb => createTitleCard(hb, 'homebrew')).join('');
 }
 
-function renderGames() {
+async function renderGames() {
     const container = document.getElementById('gamesGrid');
     if (!container) return;
 
-    const gamesToShow = AppState.games.slice(0, AppState.gamesPage * AppState.itemsPerPage);
-    container.innerHTML = gamesToShow.map(game => createTitleCard(game, 'game')).join('');
+    // Fetch games from API (includes uploaded games)
+    try {
+        const response = await fetch('/api/files?category=game');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+            // Combine sample games with uploaded games
+            const sampleGames = AppState.games;
+            const uploadedGames = result.data;
+            const allGames = [...sampleGames, ...uploadedGames];
+            
+            // Remove duplicates by titleId
+            const seen = new Set();
+            const uniqueGames = allGames.filter(g => {
+                if (seen.has(g.titleId)) return false;
+                seen.add(g.titleId);
+                return true;
+            });
+            
+            const gamesToShow = uniqueGames.slice(0, AppState.gamesPage * AppState.itemsPerPage);
+            container.innerHTML = gamesToShow.map(game => createTitleCard(game, 'game')).join('');
+        } else {
+            const gamesToShow = AppState.games.slice(0, AppState.gamesPage * AppState.itemsPerPage);
+            container.innerHTML = gamesToShow.map(game => createTitleCard(game, 'game')).join('');
+        }
+    } catch (error) {
+        // Fall back to sample games
+        const gamesToShow = AppState.games.slice(0, AppState.gamesPage * AppState.itemsPerPage);
+        container.innerHTML = gamesToShow.map(game => createTitleCard(game, 'game')).join('');
+    }
 }
 
 function renderDlc() {
@@ -927,7 +955,7 @@ function createTitleCard(title, category) {
 
     return `
         <div class="col">
-            <div class="title-card position-relative" onclick="showTitleDetails('${title.titleId}', '${category}')">
+            <div class="title-card position-relative" onclick="showTitleDetails('${title.id || title.titleId}', '${category}')">
                 <div class="card-img-top icon-placeholder" style="background: ${iconColor}">
                     <img src="${iconUrl || placeholderIcon}" 
                          alt="${title.name}" 
@@ -999,17 +1027,38 @@ function hashCode(str) {
 // ============================================
 // QR Code Generation
 // ============================================
-function showQrCode(identifier) {
-    const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+async function showQrCode(identifier) {
     const container = document.getElementById('qrCodeContainer');
     const titleName = document.getElementById('qrTitleName');
-    const titleId = document.getElementById('qrTitleId');
+    const titleIdEl = document.getElementById('qrTitleId');
 
-    // Find the title
+    // Find the title locally first
     let title = findTitleById(identifier);
     if (!title) {
-        // Check uploaded files
         title = AppState.uploadedFiles.find(f => f.id === identifier || f.titleId === identifier);
+    }
+
+    // If not found, fetch from API
+    if (!title) {
+        try {
+            const response = await fetch(`/api/files/${identifier}`);
+            const result = await response.json();
+            if (result.success) {
+                title = result.data;
+            }
+        } catch (error) {
+            console.error('Error fetching title for QR:', error);
+        }
+    }
+
+    if (!title) {
+        try {
+            const response = await fetch(`/api/files?search=${identifier}`);
+            const result = await response.json();
+            if (result.success && result.data.length > 0) {
+                title = result.data[0];
+            }
+        } catch (e) {}
     }
 
     if (!title) {
@@ -1017,36 +1066,81 @@ function showQrCode(identifier) {
     }
 
     // Generate download URL
-    const downloadUrl = generateDownloadUrl(title);
+    const baseUrl = window.location.origin;
+    const downloadUrl = title.id 
+        ? `${baseUrl}/api/download/${title.id}`
+        : `${baseUrl}/api/download/${title.titleId}`;
     
-    // Clear previous QR code
-    container.innerHTML = '';
-    
-    // Generate QR code
-    QRCode.toCanvas(downloadUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-            dark: '#000000',
-            light: '#ffffff'
-        }
-    }, (error, canvas) => {
-        if (error) {
-            console.error(error);
-            container.innerHTML = '<p class="text-danger">Error generating QR code</p>';
-            return;
-        }
-        container.appendChild(canvas);
-    });
+    // Set title info
+    titleName.textContent = title.name || 'Unknown';
+    titleIdEl.textContent = `Title ID: ${title.titleId || 'N/A'}`;
 
-    titleName.textContent = title.name;
-    titleId.textContent = `Title ID: ${title.titleId || 'N/A'}`;
-
-    // Store current download URL for copy button
+    // Store for copy button
     AppState.currentDownloadUrl = downloadUrl;
     AppState.currentQrTitle = title;
 
-    modal.show();
+    // Hide title modal first
+    const titleModalEl = document.getElementById('titleModal');
+    const titleModalInstance = bootstrap.Modal.getInstance(titleModalEl);
+    if (titleModalInstance) {
+        titleModalInstance.hide();
+    }
+
+    // Wait for title modal to close
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    // Show QR modal
+    container.innerHTML = '<p class="text-muted">Generating QR code...</p>';
+    const qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+    qrModal.show();
+
+    // Wait a bit for modal to display
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Generate QR code using qrcode-generator
+    try {
+        // Use qrcode-generator library
+        const qr = qrcode(0, 'M');
+        qr.addData(downloadUrl);
+        qr.make();
+        
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const modules = qr.getModuleCount();
+        const cellSize = 8;
+        const size = modules * cellSize;
+        
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style.width = '256px';
+        canvas.style.height = '256px';
+        
+        // Draw QR code
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#000000';
+        
+        for (let row = 0; row < modules; row++) {
+            for (let col = 0; col < modules; col++) {
+                if (qr.isDark(row, col)) {
+                    ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+        
+        container.innerHTML = '';
+        container.appendChild(canvas);
+    } catch (e) {
+        console.error('QR generation error:', e);
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <p>Could not generate QR code</p>
+                <p class="small mb-2">Direct link:</p>
+                <code class="small" style="word-break: break-all;">${downloadUrl}</code>
+            </div>
+        `;
+    }
 }
 
 function generateDownloadUrl(title) {
@@ -1096,19 +1190,48 @@ function copyDirectLink() {
 // ============================================
 // Title Details
 // ============================================
-function showTitleDetails(titleId, category) {
+async function showTitleDetails(identifier, category) {
     const modal = new bootstrap.Modal(document.getElementById('titleModal'));
-    const title = findTitleById(titleId) || AppState.uploadedFiles.find(f => f.titleId === titleId);
+    
+    // First try to find locally (by titleId or id)
+    let title = findTitleById(identifier) || 
+                AppState.uploadedFiles.find(f => f.id === identifier || f.titleId === identifier);
+    
+    // If not found locally, fetch from API by id or titleId
+    if (!title) {
+        try {
+            // Try fetching by ID first
+            const response = await fetch(`/api/files/${identifier}`);
+            const result = await response.json();
+            if (result.success) {
+                title = result.data;
+            }
+        } catch {
+            // If not found by ID, try search
+            try {
+                const response = await fetch(`/api/files?search=${identifier}`);
+                const result = await response.json();
+                if (result.success && result.data.length > 0) {
+                    title = result.data[0];
+                }
+            } catch (error) {
+                console.error('Error fetching title:', error);
+            }
+        }
+    }
 
     if (!title) {
         showToast('Error', 'Title not found');
         return;
     }
 
+    // Use title's category if not provided
+    const titleCategory = category || title.category || 'game';
+
     document.getElementById('modalTitleName').textContent = title.name;
     document.getElementById('modalTitleId').textContent = title.titleId || 'N/A';
     document.getElementById('modalProductCode').textContent = title.productCode || 'N/A';
-    document.getElementById('modalCategory').textContent = category.charAt(0).toUpperCase() + category.slice(1);
+    document.getElementById('modalCategory').textContent = titleCategory.charAt(0).toUpperCase() + titleCategory.slice(1);
     document.getElementById('modalRegion').textContent = (title.region || 'global').replace('region-', '').toUpperCase();
     document.getElementById('modalSize').textContent = typeof title.size === 'number' ? formatSizeWithBlocks(title.size) : (title.size || 'Unknown');
     document.getElementById('modalDescription').textContent = title.description || 'No description available.';
@@ -1132,18 +1255,23 @@ function showTitleDetails(titleId, category) {
 
     // Set up buttons
     document.getElementById('modalDownloadBtn').onclick = () => {
-        if (title.fileUrl) {
+        if (title.id) {
+            window.open(`/api/download/${title.id}`, '_blank');
+        } else if (title.fileUrl) {
             window.open(title.fileUrl, '_blank');
-        } else if (title.titleId) {
-            window.open(`/api/download/${title.id || title.titleId}`, '_blank');
         } else {
             showToast('Info', 'Download link not available');
         }
     };
 
+    // Store the full title for QR code
+    const modalTitle = title;
+    
     document.getElementById('modalQrBtn').onclick = () => {
-        bootstrap.Modal.getInstance(document.getElementById('titleModal'))?.hide();
-        setTimeout(() => showQrCode(titleId), 300);
+        // Use file id if available, otherwise use titleId
+        const qrIdentifier = modalTitle.id || modalTitle.titleId || identifier;
+        console.log('QR button clicked, identifier:', qrIdentifier);
+        showQrCode(qrIdentifier);
     };
 
     modal.show();
@@ -1373,7 +1501,7 @@ function saveUploadedFiles() {
     }
 }
 
-function deleteFile(fileId) {
+async function deleteFile(fileId) {
     // Check if user is admin
     if (!Auth.isAdmin()) {
         showToast('Access Denied', 'Only administrators can delete files');
@@ -1382,12 +1510,22 @@ function deleteFile(fileId) {
     
     if (!confirm('Are you sure you want to delete this file?')) return;
 
-    const index = AppState.uploadedFiles.findIndex(f => f.id === fileId);
-    if (index > -1) {
-        AppState.uploadedFiles.splice(index, 1);
-        saveUploadedFiles();
-        renderUploadedFiles();
-        showToast('Deleted', 'File removed successfully');
+    try {
+        const response = await fetch(`/api/files/${fileId}?adminUser=admin`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Deleted', 'File removed successfully');
+            renderUploadedFiles();
+        } else {
+            showToast('Error', result.error || 'Failed to delete file');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showToast('Error', 'Failed to delete file');
     }
 }
 

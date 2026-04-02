@@ -253,6 +253,13 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
         if (needsDecryption) {
             console.log(`[Upload] Decrypting ${fileName}...`);
             
+            // Log that decryption is starting
+            await addLog('DECRYPTION_START', {
+                fileName,
+                category,
+                ip: req.ip
+            }, req.body.uploadedBy || 'Anonymous');
+            
             // Create category subfolder in decrypted dir
             const decryptCategoryDir = path.join(DECRYPTED_DIR, category);
             if (!existsSync(decryptCategoryDir)) mkdirSync(decryptCategoryDir, { recursive: true });
@@ -264,12 +271,29 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
                 // Move decrypted file to final location
                 finalPath = await moveToFinal(decryptionResult.path, finalDir, fileName);
                 console.log(`[Upload] Decrypted and moved to: ${finalPath}`);
+                
+                // Log successful decryption
+                await addLog('DECRYPTION_SUCCESS', {
+                    fileName,
+                    category,
+                    originalSize: decryptionResult.originalSize,
+                    decryptedSize: decryptionResult.size,
+                    ip: req.ip
+                }, req.body.uploadedBy || 'Anonymous');
             } else {
                 // Decryption failed, move original to final location
                 console.log(`[Upload] Decryption failed: ${decryptionResult.error}. Using original file.`);
                 if (!existsSync(finalDir)) mkdirSync(finalDir, { recursive: true });
                 finalPath = path.join(finalDir, fileName);
                 await fs.copyFile(stagingPath, finalPath);
+                
+                // Log decryption failure
+                await addLog('DECRYPTION_FAILED', {
+                    fileName,
+                    category,
+                    error: decryptionResult.error,
+                    ip: req.ip
+                }, req.body.uploadedBy || 'Anonymous');
             }
             
             // Clean up staging file
@@ -280,6 +304,13 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
             finalPath = path.join(finalDir, fileName);
             await fs.copyFile(stagingPath, finalPath);
             await fs.unlink(stagingPath);
+            
+            // Log that file was not encrypted
+            await addLog('NO_DECRYPTION_NEEDED', {
+                fileName,
+                category,
+                ip: req.ip
+            }, req.body.uploadedBy || 'Anonymous');
         }
         
         const relativePath = path.relative(__dirname, finalPath).replace(/\\/g, '/');

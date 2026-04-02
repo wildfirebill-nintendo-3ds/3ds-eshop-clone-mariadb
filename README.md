@@ -1,16 +1,20 @@
 # 3DS eShop Clone
 
-A web-based Nintendo 3DS eShop clone with MariaDB backend, file management, QR code generation, and FBI seed support.
+> **⚠️ DISCLAIMER: This application contains executable files (.exe) including CIA decryption tools (ctrtool.exe, makerom.exe, decrypt.exe) in the `/tools/` folder. These are required for the decryption functionality and are sourced from the [Batch-CIA-3DS-Decryptor-Redux](https://github.com/xxmichibxx/Batch-CIA-3DS-Decryptor-Redux) project.**
+
+---
+
+A web-based Nintendo 3DS eShop clone with MariaDB backend, file management, QR code generation, FBI seed support, and CIA/3DS decryption.
 
 ## Description
 
-Recreates the Nintendo 3DS eShop experience as a web application. Browse games, DLC, apps, Virtual Console titles, and homebrew. Upload files and generate QR codes for easy installation via FBI on modded 3DS consoles.
+Recreates the Nintendo 3DS eShop experience as a web application. Browse games, DLC, apps, Virtual Console titles, and homebrew. Upload files which are automatically staged, decrypted (for CIA/3DS files), and organized. Generate QR codes for easy installation via FBI on modded 3DS consoles.
 
 ## Features
 
 ### Content Sections
 - **Home** - Featured carousel, games, and recent homebrew
-- **Games** - 3DS games with region filtering (USA/EUR/JPN)
+- **Games** - 3DS games with region filtering (USA/EUR/JPN) + uploaded games
 - **DLC** - Downloadable content
 - **Apps** - System applications
 - **Virtual Console** - NES, SNES, Game Boy, GBC, GBA, N64, Genesis
@@ -18,18 +22,27 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - **Seeds** - FBI seed database (1800+ seeds)
 - **Stats** - Upload/download charts and statistics
 - **Hack Guide** - 3DS hacking tutorials
-- **Upload** - File upload interface
+- **Upload** - File upload interface with decryption
 
 ### File Management
 - Upload CIA, 3DSX, 3DS, ZIP files (up to 5GB)
-- SHA256 hash calculation
+- Automatic staging and decryption for CIA/3DS files
+- SHA256 hash calculation (before and after decryption)
 - Download tracking
 - Product code support (CTR-P-XXXX)
 - Block size display (1 block = 128KB)
 - Files organized by category
 
+### Decryption System
+- Uploads go to staging folder first
+- CIA files are extracted, decrypted, and rebuilt
+- 3DS files are decrypted and trimmed
+- Original and decrypted SHA256 tracked
+- Decryption status logged (success/failure)
+- Tools: ctrtool.exe, makerom.exe, decrypt.exe, seeddb.bin
+
 ### QR Code System
-- Generate QR codes for any title
+- Generate QR codes for any title (uses local qrcode library)
 - Download QR as PNG
 - Copy direct links
 - FBI remote install support
@@ -38,7 +51,7 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - Dashboard with statistics cards
 - Charts (uploads, downloads, categories)
 - File management (edit/delete)
-- Activity logs
+- Activity logs (including decryption logs)
 - Uploaders leaderboard
 
 ### Statistics (Public)
@@ -54,7 +67,8 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - Search across all titles
 - Responsive design (Bootstrap 5)
 - Toast notifications
-- Game icons from GitHub
+- Game icons from GitHub repository
+- Title modal with product code and description
 
 ## Tech Stack
 
@@ -65,7 +79,8 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 | Database | MariaDB | 12.2.2 |
 | Frontend | Bootstrap | 5.3.2 |
 | Charts | Chart.js | Latest |
-| QR Codes | QRCode.js | 1.5.3 |
+| QR Codes | qrcode-generator | 1.4.4 |
+| Decryption | ctrtool/makerom/decrypt | v1.0.6.1 |
 
 ## Installation
 
@@ -131,19 +146,28 @@ npm run dev
 3ds-eshop-clone/
 ├── server.js           # Express backend (ES modules)
 ├── db.js               # MariaDB module (ES modules)
+├── decrypt.js          # Decryption module
 ├── index.html          # Main frontend
 ├── admin.html          # Admin panel
 ├── schema.sql          # Database schema
 ├── .env                # Configuration
 ├── package.json
 ├── css/
-│   └── styles.css
+│   └── styles.css      # Includes dark mode
 ├── js/
-│   └── app.js
+│   ├── app.js          # Main frontend logic
+│   └── qrcode.min.js   # QR code library (local)
+├── tools/              # Decryption tools (EXE FILES)
+│   ├── ctrtool.exe
+│   ├── makerom.exe
+│   ├── decrypt.exe
+│   └── seeddb.bin
 └── data/
-    ├── games/
-    ├── dlc/
-    ├── apps/
+    ├── staging/        # Upload staging
+    ├── decrypted/      # Decrypted output
+    ├── games/          # Game files
+    ├── dlc/            # DLC content
+    ├── apps/           # App files
     ├── virtual-console/
     ├── homebrew/
     └── seeds/
@@ -153,8 +177,8 @@ npm run dev
 
 | Table | Description |
 |-------|-------------|
-| `files` | Uploaded file metadata |
-| `logs` | Activity logs |
+| `files` | Uploaded file metadata (with decryption tracking) |
+| `logs` | Activity logs (includes decryption events) |
 | `stats` | Daily statistics |
 | `seeds` | FBI seeds |
 | `users` | Admin accounts |
@@ -166,10 +190,15 @@ npm run dev
 |--------|----------|-------------|
 | GET | `/api/files` | List files |
 | GET | `/api/files/:id` | Get file |
-| POST | `/api/files/upload` | Upload file |
+| POST | `/api/files/upload` | Upload file (stages + decrypts) |
 | PUT | `/api/files/:id` | Update file |
 | DELETE | `/api/files/:id` | Delete file |
 | GET | `/api/download/:id` | Download file |
+
+### Decryption
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/decrypt/tools` | Check tools status |
 
 ### Seeds
 | Method | Endpoint | Description |
@@ -184,9 +213,34 @@ npm run dev
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stats` | Get statistics |
-| GET | `/api/stats/uploads` | Get upload chart data |
 | GET | `/api/logs` | Get logs |
 | DELETE | `/api/logs` | Clear logs |
+
+## Upload Flow
+
+```
+1. File uploaded → data/staging/
+2. SHA256 calculated (original)
+3. If CIA/3DS:
+   - Extract with ctrtool
+   - Decrypt content
+   - Rebuild file
+4. Move to final location (data/games/, etc.)
+5. SHA256 calculated (final)
+6. Save to database with decryption status
+```
+
+## Log Events
+
+| Event | Description |
+|-------|-------------|
+| `FILE_UPLOAD` | File uploaded |
+| `DECRYPTION_START` | Decryption process started |
+| `DECRYPTION_SUCCESS` | File decrypted successfully |
+| `DECRYPTION_FAILED` | Decryption failed |
+| `NO_DECRYPTION_NEEDED` | File type doesn't need decryption |
+| `FILE_DOWNLOAD` | File downloaded |
+| `SEED_DOWNLOAD` | Seed downloaded |
 
 ## Using with FBI
 
@@ -208,6 +262,9 @@ Seeds go to `sd:/fbi/seed/<titleid>.dat`
 | API: /api/stats | ✅ | Returns JSON |
 | API: /api/files | ✅ | Returns JSON |
 | API: /api/seeds | ✅ | Returns JSON |
+| API: /api/decrypt/tools | ✅ | All tools installed |
+| Decryption Flow | ✅ | CIA files processed |
+| QR Code Generation | ✅ | Local library works |
 | Main Page Load | ✅ | HTML served |
 | Admin Page Load | ✅ | Charts work |
 
@@ -227,15 +284,18 @@ Seeds go to `sd:/fbi/seed/<titleid>.dat`
 
 - Helmet.js for HTTP headers
 - CORS enabled
-- SHA256 file integrity
+- SHA256 file integrity (before and after decryption)
 - Input validation
 - Admin authentication
+- Staging folder for uploads
 
 ## Credits
 
+- [Batch-CIA-3DS-Decryptor-Redux](https://github.com/xxmichibxx/Batch-CIA-3DS-Decryptor-Redux) - Decryption tools
 - [3DS Game Icons](https://github.com/wildfirebill-nintendo-3ds/3dsgamesicons)
 - [3DS-rom-tools](https://github.com/ihaveamac/3DS-rom-tools)
 - [3ds.hacks.guide](https://3ds.hacks.guide)
+- [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)
 
 ## License
 
