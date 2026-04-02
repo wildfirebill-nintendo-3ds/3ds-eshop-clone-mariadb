@@ -607,6 +607,8 @@ function showSection(sectionName) {
         renderHomebrew();
     } else if (sectionName === 'seeds') {
         loadSeeds();
+    } else if (sectionName === 'stats') {
+        loadStats();
     } else if (sectionName === 'home') {
         renderFeaturedGames();
         renderRecentHomebrew();
@@ -1314,11 +1316,11 @@ function readFileAsBase64(file) {
 }
 
 function generateId() {
-    return 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return `file_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
 function generateTitleId() {
-    return '00040000' + Math.random().toString(16).substr(2, 8).toUpperCase();
+    return `00040000${Math.random().toString(16).slice(2, 10).toUpperCase()}`;
 }
 
 function loadUploadedFiles() {
@@ -1483,6 +1485,213 @@ function loadGuideContent(guideId) {
             </div>
         `;
     }
+}
+
+// ============================================
+// Statistics Management
+// ============================================
+let statsCharts = {};
+
+async function loadStats() {
+    try {
+        const [statsRes, seedsRes] = await Promise.all([
+            fetch('/api/stats'),
+            fetch('/api/seeds/stats')
+        ]);
+        
+        const statsData = await statsRes.json();
+        const seedsData = await seedsRes.json();
+        
+        if (statsData.success) {
+            const { data } = statsData;
+            
+            // Update stat cards
+            document.getElementById('statTotalFiles').textContent = data.totalFiles || 0;
+            document.getElementById('statTotalDownloads').textContent = data.totalDownloads || 0;
+            document.getElementById('statTotalUploaders').textContent = Object.keys(data.byUser || {}).length;
+            document.getElementById('statTotalSeeds').textContent = seedsData.success ? seedsData.data.totalSeeds : 0;
+            
+            // Render activity chart
+            renderActivityChart(data.dailyStats || []);
+            
+            // Render category chart
+            renderCategoryChart(data.byCategory || {});
+            
+            // Render user chart
+            renderUserChart(data.byUser || {});
+            
+            // Render lists
+            renderTopDownloaded(data.topDownloaded || []);
+            renderRecentUploads(data.recentUploads || []);
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+function renderActivityChart(dailyStats) {
+    const ctx = document.getElementById('activityChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    if (statsCharts.activity) statsCharts.activity.destroy();
+    
+    statsCharts.activity = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyStats.map(d => d.label),
+            datasets: [
+                {
+                    label: 'Uploads',
+                    data: dailyStats.map(d => d.uploads),
+                    borderColor: '#00a651',
+                    backgroundColor: 'rgba(0, 166, 81, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Downloads',
+                    data: dailyStats.map(d => d.downloads),
+                    borderColor: '#0066cc',
+                    backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { labels: { color: '#333' } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#666' }
+                },
+                x: {
+                    ticks: { color: '#666' }
+                }
+            }
+        }
+    });
+}
+
+function renderCategoryChart(byCategory) {
+    const ctx = document.getElementById('categoryChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    if (statsCharts.category) statsCharts.category.destroy();
+    
+    const colors = {
+        game: '#0066cc',
+        dlc: '#ff6600',
+        app: '#00a651',
+        'virtual-console': '#6f42c1',
+        homebrew: '#9b59b6'
+    };
+    
+    const labels = Object.keys(byCategory).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+    const data = Object.values(byCategory);
+    const bgColors = Object.keys(byCategory).map(k => colors[k] || '#888');
+    
+    statsCharts.category = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: bgColors
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#333' }
+                }
+            }
+        }
+    });
+}
+
+function renderUserChart(byUser) {
+    const ctx = document.getElementById('userChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    if (statsCharts.user) statsCharts.user.destroy();
+    
+    const sorted = Object.entries(byUser)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    statsCharts.user = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sorted.map(([name]) => name),
+            datasets: [{
+                label: 'Uploads',
+                data: sorted.map(([, count]) => count),
+                backgroundColor: '#0066cc'
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { color: '#666' }
+                },
+                y: {
+                    ticks: { color: '#666' }
+                }
+            }
+        }
+    });
+}
+
+function renderTopDownloaded(files) {
+    const container = document.getElementById('topDownloaded');
+    if (!container) return;
+    
+    if (files.length === 0) {
+        container.innerHTML = '<div class="list-group-item text-muted">No downloads yet</div>';
+        return;
+    }
+    
+    container.innerHTML = files.map((file, i) => `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-secondary me-2">#${i + 1}</span>
+                <span>${file.name}</span>
+            </div>
+            <span class="badge bg-success">${file.downloadCount} downloads</span>
+        </div>
+    `).join('');
+}
+
+function renderRecentUploads(files) {
+    const container = document.getElementById('recentUploads');
+    if (!container) return;
+    
+    if (files.length === 0) {
+        container.innerHTML = '<div class="list-group-item text-muted">No uploads yet</div>';
+        return;
+    }
+    
+    container.innerHTML = files.map(file => `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge badge-${file.category} me-2">${file.category}</span>
+                <span>${file.name}</span>
+            </div>
+            <small class="text-muted">${new Date(file.uploadDate).toLocaleDateString()}</small>
+        </div>
+    `).join('');
 }
 
 // ============================================

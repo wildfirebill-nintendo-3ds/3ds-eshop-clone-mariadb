@@ -16,6 +16,7 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - **Virtual Console** - NES, SNES, Game Boy, GBC, GBA, N64, Genesis
 - **Homebrew** - Emulators, utilities, games, themes, CFW tools
 - **Seeds** - FBI seed database (1800+ seeds)
+- **Stats** - Upload/download charts and statistics
 - **Hack Guide** - 3DS hacking tutorials
 - **Upload** - File upload interface
 
@@ -23,8 +24,8 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - Upload CIA, 3DSX, 3DS, ZIP files (up to 5GB)
 - SHA256 hash calculation
 - Download tracking
-- Product code support
-- Block size display
+- Product code support (CTR-P-XXXX)
+- Block size display (1 block = 128KB)
 - Files organized by category
 
 ### QR Code System
@@ -40,18 +41,37 @@ Recreates the Nintendo 3DS eShop experience as a web application. Browse games, 
 - Activity logs
 - Uploaders leaderboard
 
+### Statistics (Public)
+- Total files and downloads
+- Activity chart (7 days)
+- Category distribution
+- Uploads by user chart
+- Top downloaded files
+- Recent uploads
+
 ### Additional Features
 - Dark mode with persistence
 - Search across all titles
-- Responsive design
+- Responsive design (Bootstrap 5)
 - Toast notifications
 - Game icons from GitHub
+
+## Tech Stack
+
+| Component | Technology | Version |
+|-----------|------------|---------|
+| Runtime | Node.js | 22.17.0+ |
+| Backend | Express | 4.21.0 |
+| Database | MariaDB | 12.2.2 |
+| Frontend | Bootstrap | 5.3.2 |
+| Charts | Chart.js | Latest |
+| QR Codes | QRCode.js | 1.5.3 |
 
 ## Installation
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) 16+
-- [MariaDB](https://mariadb.org/download/) or MySQL
+- [Node.js](https://nodejs.org/) 22+
+- [MariaDB](https://mariadb.org/download/) 10+
 
 ### Steps
 
@@ -66,31 +86,37 @@ cd 3ds-eshop-clone
 npm install
 ```
 
-3. Create the database:
+3. Start MariaDB:
 ```bash
-mysql -u root -p < schema.sql
+"C:\Program Files\MariaDB 12.2\bin\mariadbd.exe" --console
 ```
 
-4. Configure `.env`:
+4. Create database:
+```bash
+mysql -u root -e "CREATE DATABASE 3ds_eshop;"
+mysql -u root 3ds_eshop < schema.sql
+```
+
+5. Configure `.env`:
 ```env
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=yourpassword
+DB_PASSWORD=
 DB_NAME=3ds_eshop
 PORT=4000
 ```
 
-5. Start the server:
+6. Start the server:
 ```bash
 npm start
 ```
 
-6. Open in browser:
+7. Open in browser:
 - **eShop:** http://localhost:4000
 - **Admin:** http://localhost:4000/admin.html
 
-### Development
+### Development Mode
 ```bash
 npm run dev
 ```
@@ -103,8 +129,8 @@ npm run dev
 
 ```
 3ds-eshop-clone/
-├── server.js           # Express backend
-├── db.js               # MariaDB module
+├── server.js           # Express backend (ES modules)
+├── db.js               # MariaDB module (ES modules)
 ├── index.html          # Main frontend
 ├── admin.html          # Admin panel
 ├── schema.sql          # Database schema
@@ -158,6 +184,7 @@ npm run dev
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/stats` | Get statistics |
+| GET | `/api/stats/uploads` | Get upload chart data |
 | GET | `/api/logs` | Get logs |
 | DELETE | `/api/logs` | Clear logs |
 
@@ -170,12 +197,39 @@ npm run dev
 ### Seeds
 Seeds go to `sd:/fbi/seed/<titleid>.dat`
 
-## Technologies
+## MariaDB Test Results
 
-- **Frontend:** HTML5, Bootstrap 5, Chart.js, QRCode.js
-- **Backend:** Node.js, Express 4
-- **Database:** MariaDB (mysql2)
-- **Upload:** Multer
+| Test | Status | Result |
+|------|--------|--------|
+| MariaDB Install | ✅ | Version 12.2.2 |
+| Database Create | ✅ | 3ds_eshop created |
+| Tables Create | ✅ | 5 tables created |
+| Server Start | ✅ | Running on port 4000 |
+| API: /api/stats | ✅ | Returns JSON |
+| API: /api/files | ✅ | Returns JSON |
+| API: /api/seeds | ✅ | Returns JSON |
+| Main Page Load | ✅ | HTML served |
+| Admin Page Load | ✅ | Charts work |
+
+## Node.js v22+ Upgrades
+
+- ES Modules (`import/export`) instead of CommonJS (`require`)
+- Native `fetch()` API instead of `http/https` modules
+- `fs/promises` for async file operations
+- `stream/promises` pipeline for file hashing
+- `import.meta.url` for `__dirname`
+- `node --watch` for development (no nodemon needed)
+- Modern nullish coalescing (`??`) operator
+- Template literals for strings
+- `.slice()` instead of deprecated `.substr()`
+
+## Security
+
+- Helmet.js for HTTP headers
+- CORS enabled
+- SHA256 file integrity
+- Input validation
+- Admin authentication
 
 ## Credits
 

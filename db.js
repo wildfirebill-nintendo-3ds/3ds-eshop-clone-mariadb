@@ -1,15 +1,14 @@
-const mysql = require('mysql2/promise');
-const path = require('path');
-const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+import mysql from 'mysql2/promise';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { v4 as uuidv4 } from 'uuid';
 
 let pool;
 
 // ============================================
 // Initialize Database Connection
 // ============================================
-async function initDatabase() {
+export async function initDatabase() {
     try {
         pool = mysql.createPool({
             host: process.env.DB_HOST || 'localhost',
@@ -34,7 +33,6 @@ async function initDatabase() {
         return pool;
     } catch (error) {
         console.error('MariaDB connection failed:', error.message);
-        console.log('Make sure MariaDB is running and credentials are correct in .env');
         throw error;
     }
 }
@@ -116,7 +114,7 @@ async function createTables() {
 // ============================================
 // Files Operations
 // ============================================
-const filesDB = {
+export const filesDB = {
     async getAll(options = {}) {
         const { category, search, page = 1, limit = 50 } = options;
         
@@ -133,7 +131,7 @@ const filesDB = {
             params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
         }
         
-        const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+        const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
         
         const [countResult] = await pool.query(`SELECT COUNT(*) as count FROM files ${whereClause}`, params);
         const total = countResult[0].count;
@@ -170,21 +168,21 @@ const filesDB = {
         `, [
             id,
             file.name,
-            file.titleId || null,
-            file.productCode || null,
+            file.titleId ?? null,
+            file.productCode ?? null,
             file.category,
-            file.homebrewCategory || null,
-            file.vcSystem || null,
-            file.region || 'region-global',
-            file.description || '',
-            file.size || 0,
+            file.homebrewCategory ?? null,
+            file.vcSystem ?? null,
+            file.region ?? 'region-global',
+            file.description ?? '',
+            file.size ?? 0,
             file.fileName,
             file.filePath,
             file.fileType,
-            file.sha256 || null,
-            file.uploadedBy || 'Anonymous',
-            file.downloadCount || 0,
-            file.icon || null
+            file.sha256 ?? null,
+            file.uploadedBy ?? 'Anonymous',
+            file.downloadCount ?? 0,
+            file.icon ?? null
         ]);
         
         return { ...file, id };
@@ -230,11 +228,8 @@ const filesDB = {
         const [recentUploads] = await pool.query('SELECT * FROM files ORDER BY uploadDate DESC LIMIT 10');
         const [byUser] = await pool.query('SELECT uploadedBy, COUNT(*) as count FROM files GROUP BY uploadedBy');
         
-        const byCategoryObj = {};
-        byCategory.forEach(row => { byCategoryObj[row.category] = row.count; });
-        
-        const byUserObj = {};
-        byUser.forEach(row => { byUserObj[row.uploadedBy] = row.count; });
+        const byCategoryObj = Object.fromEntries(byCategory.map(r => [r.category, r.count]));
+        const byUserObj = Object.fromEntries(byUser.map(r => [r.uploadedBy, r.count]));
         
         return {
             totalFiles: totalFiles[0].count,
@@ -258,7 +253,7 @@ const filesDB = {
 // ============================================
 // Logs Operations
 // ============================================
-const logsDB = {
+export const logsDB = {
     async add(action, details, user = 'system', ip = 'unknown') {
         const id = uuidv4();
         const detailsStr = typeof details === 'object' ? JSON.stringify(details) : details;
@@ -295,7 +290,7 @@ const logsDB = {
             params.push(`%${user.toLowerCase()}%`);
         }
         
-        const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+        const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
         
         const [countResult] = await pool.query(`SELECT COUNT(*) as count FROM logs ${whereClause}`, params);
         const total = countResult[0].count;
@@ -309,7 +304,7 @@ const logsDB = {
         // Parse JSON details
         data.forEach(row => {
             if (typeof row.details === 'string') {
-                try { row.details = JSON.parse(row.details); } catch (e) {}
+                try { row.details = JSON.parse(row.details); } catch {}
             }
         });
         
@@ -331,7 +326,7 @@ const logsDB = {
         const [rows] = await pool.query('SELECT * FROM logs ORDER BY timestamp DESC LIMIT ?', [limit]);
         rows.forEach(row => {
             if (typeof row.details === 'string') {
-                try { row.details = JSON.parse(row.details); } catch (e) {}
+                try { row.details = JSON.parse(row.details); } catch {}
             }
         });
         return rows;
@@ -367,7 +362,7 @@ const logsDB = {
 // ============================================
 // Stats Operations
 // ============================================
-const statsDB = {
+export const statsDB = {
     async update(action, category) {
         const today = new Date().toISOString().split('T')[0];
         
@@ -380,7 +375,7 @@ const statsDB = {
             }
             
             if (action === 'upload') {
-                byCategory[category] = (byCategory[category] || 0) + 1;
+                byCategory[category] = (byCategory[category] ?? 0) + 1;
             }
             
             await pool.query(`UPDATE stats SET 
@@ -394,10 +389,7 @@ const statsDB = {
                 today
             ]);
         } else {
-            let byCategory = {};
-            if (action === 'upload') {
-                byCategory[category] = 1;
-            }
+            const byCategory = action === 'upload' ? { [category]: 1 } : {};
             
             await pool.query(
                 'INSERT INTO stats (date, uploads, downloads, byCategory) VALUES (?, ?, ?, ?)',
@@ -420,7 +412,7 @@ const statsDB = {
 // ============================================
 // Seeds Operations
 // ============================================
-const seedsDB = {
+export const seedsDB = {
     async getAll(options = {}) {
         const { search, page = 1, limit = 100 } = options;
         
@@ -432,7 +424,7 @@ const seedsDB = {
             params.push(`%${search.toLowerCase()}%`);
         }
         
-        const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+        const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
         
         const [countResult] = await pool.query(`SELECT COUNT(*) as count FROM seeds ${whereClause}`, params);
         const total = countResult[0].count;
@@ -507,27 +499,27 @@ const seedsDB = {
 // ============================================
 // Migration from JSON
 // ============================================
-async function migrateFromJSON(dataDir) {
+export async function migrateFromJSON(dataDir) {
     console.log('Starting migration from JSON to MariaDB...');
     
     // Migrate files
     const filesPath = path.join(dataDir, 'db', 'files.json');
-    if (fs.existsSync(filesPath)) {
-        const files = JSON.parse(fs.readFileSync(filesPath, 'utf8'));
+    try {
+        const files = JSON.parse(await fs.readFile(filesPath, 'utf8'));
         for (const file of files) {
             try {
                 await filesDB.create(file);
-            } catch (e) {
+            } catch {
                 console.log(`Skipped duplicate file: ${file.name}`);
             }
         }
         console.log(`Migrated ${files.length} files`);
-    }
+    } catch {}
     
     // Migrate logs
     const logsPath = path.join(dataDir, 'db', 'logs.json');
-    if (fs.existsSync(logsPath)) {
-        const logs = JSON.parse(fs.readFileSync(logsPath, 'utf8'));
+    try {
+        const logs = JSON.parse(await fs.readFile(logsPath, 'utf8'));
         for (const log of logs) {
             try {
                 const details = typeof log.details === 'object' ? JSON.stringify(log.details) : log.details;
@@ -535,15 +527,15 @@ async function migrateFromJSON(dataDir) {
                     'INSERT IGNORE INTO logs (id, timestamp, action, details, user, ip) VALUES (?, ?, ?, ?, ?, ?)',
                     [log.id, log.timestamp, log.action, details, log.user || 'system', log.ip || 'unknown']
                 );
-            } catch (e) {}
+            } catch {}
         }
         console.log(`Migrated ${logs.length} logs`);
-    }
+    } catch {}
     
     // Migrate stats
     const statsPath = path.join(dataDir, 'db', 'stats.json');
-    if (fs.existsSync(statsPath)) {
-        const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+    try {
+        const stats = JSON.parse(await fs.readFile(statsPath, 'utf8'));
         for (const stat of stats) {
             try {
                 const byCategory = typeof stat.byCategory === 'object' ? JSON.stringify(stat.byCategory) : stat.byCategory;
@@ -551,18 +543,18 @@ async function migrateFromJSON(dataDir) {
                     'INSERT IGNORE INTO stats (date, uploads, downloads, byCategory) VALUES (?, ?, ?, ?)',
                     [stat.date, stat.uploads || 0, stat.downloads || 0, byCategory]
                 );
-            } catch (e) {}
+            } catch {}
         }
         console.log(`Migrated ${stats.length} stats`);
-    }
+    } catch {}
     
     // Migrate seeds
     const seedsPath = path.join(dataDir, 'db', 'seeds.json');
-    if (fs.existsSync(seedsPath)) {
-        const seeds = JSON.parse(fs.readFileSync(seedsPath, 'utf8'));
+    try {
+        const seeds = JSON.parse(await fs.readFile(seedsPath, 'utf8'));
         const added = await seedsDB.bulkInsert(seeds);
         console.log(`Migrated ${added} seeds`);
-    }
+    } catch {}
     
     console.log('Migration complete!');
 }
@@ -570,18 +562,8 @@ async function migrateFromJSON(dataDir) {
 // ============================================
 // Close Database
 // ============================================
-async function closeDatabase() {
+export async function closeDatabase() {
     if (pool) {
         await pool.end();
     }
 }
-
-module.exports = {
-    initDatabase,
-    closeDatabase,
-    migrateFromJSON,
-    filesDB,
-    logsDB,
-    statsDB,
-    seedsDB
-};

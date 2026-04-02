@@ -851,3 +851,26 @@ body.dark-mode .carousel-indicators button {
 body.dark-mode .carousel-indicators button.active {
     background-color: #ffffff;
 }
+
+/* Stats Section Cards */
+body.dark-mode .card.text-center .card-body h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .card.text-center .card-body .bi {
+    opacity: 0.9;
+}
+
+body.dark-mode .card-header {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-bottom-color: var(--dark-border, #2d2d44);
+}
+
+body.dark-mode .list-group-item {
+    background-color: transparent;
+    border-color: var(--dark-border, #2d2d44);
+}
+
+body.dark-mode .badge.bg-secondary {
+    background-color: #4a4a6a !important;
+}
