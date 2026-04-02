@@ -472,9 +472,44 @@ function initializeApp() {
     initDarkMode(); // Initialize dark mode
     loadUploadedFiles();
     loadTitleDb();
+    loadDecryptToolsStatus();
     setupEventListeners();
     showSection('home');
     loadGuideContent('getting-started');
+}
+
+// ============================================
+// Decrypt Tools Status
+// ============================================
+async function loadDecryptToolsStatus() {
+    const container = document.getElementById('decryptToolsStatus');
+    if (!container) return;
+    
+    try {
+        const response = await fetch('/api/decrypt/tools');
+        const result = await response.json();
+        
+        if (result.success) {
+            const tools = result.tools;
+            let html = '';
+            
+            for (const [name, info] of Object.entries(tools)) {
+                const icon = info.installed ? 'bi-check-circle text-success' : 'bi-x-circle text-danger';
+                const label = name === 'seeddb' ? 'seeddb.bin' : `${name}.exe`;
+                html += `<li class="mb-1"><i class="bi ${icon}"></i> ${label}</li>`;
+            }
+            
+            if (result.allInstalled) {
+                html += '<li class="mt-2 text-success"><strong><i class="bi bi-shield-check"></i> All tools ready</strong></li>';
+            } else {
+                html += '<li class="mt-2 text-warning"><strong><i class="bi bi-exclamation-triangle"></i> Some tools missing</strong></li>';
+            }
+            
+            container.innerHTML = html;
+        }
+    } catch (error) {
+        container.innerHTML = '<li class="mb-1 text-danger"><i class="bi bi-x-circle"></i> Failed to check tools</li>';
+    }
 }
 
 // ============================================
@@ -777,30 +812,39 @@ function renderHomebrew(category = 'all') {
     }
 }
 
-function renderUploadedFiles() {
+async function renderUploadedFiles() {
     const container = document.getElementById('uploadedFilesBody');
     if (!container) return;
 
     const isAdmin = Auth.isAdmin();
 
-    if (AppState.uploadedFiles.length === 0) {
-        container.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center py-4">
-                    <i class="bi bi-inbox fs-1 text-muted"></i>
-                    <p class="text-muted mb-0">No files uploaded yet</p>
-                </td>
-            </tr>
-        `;
-    } else {
-        container.innerHTML = AppState.uploadedFiles.map(file => `
+    try {
+        const response = await fetch('/api/files');
+        const result = await response.json();
+        
+        if (!result.success || result.data.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-4">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <p class="text-muted mb-0">No files uploaded yet</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        container.innerHTML = result.data.map(file => `
             <tr>
                 <td>
                     <img src="${file.icon || getIconUrl(file) || getPlaceholderIcon(file.name, '#667eea')}" 
                          alt="${file.name}" width="40" height="40" class="rounded"
                          onerror="this.src='${getPlaceholderIcon(file.name, '#667eea')}'">
                 </td>
-                <td><strong>${file.name}</strong></td>
+                <td>
+                    <strong>${file.name}</strong>
+                    ${file.wasDecrypted ? '<span class="badge bg-info ms-1">Decrypted</span>' : ''}
+                </td>
                 <td><span class="badge badge-${file.category}">${file.category}</span></td>
                 <td>${file.uploadedBy || 'Anonymous'}</td>
                 <td><span class="badge bg-success">${file.downloadCount || 0}</span></td>
@@ -815,9 +859,9 @@ function renderUploadedFiles() {
                         <button class="btn btn-outline-primary" onclick="showQrCode('${file.id}')" title="Show QR Code">
                             <i class="bi bi-qr-code"></i>
                         </button>
-                        <button class="btn btn-outline-success" onclick="downloadFile('${file.id}')" title="Download">
+                        <a href="/api/download/${file.id}" class="btn btn-outline-success" title="Download">
                             <i class="bi bi-download"></i>
-                        </button>
+                        </a>
                         ${isAdmin ? `
                         <button class="btn btn-outline-danger admin-only" onclick="deleteFile('${file.id}')" title="Delete">
                             <i class="bi bi-trash"></i>
@@ -827,6 +871,16 @@ function renderUploadedFiles() {
                 </td>
             </tr>
         `).join('');
+    } catch (error) {
+        console.error('Error loading files:', error);
+        container.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                    <p>Failed to load files</p>
+                </td>
+            </tr>
+        `;
     }
 }
 
@@ -1229,74 +1283,45 @@ async function handleFileUpload(e) {
             return;
         }
 
-        const file = fileInput.files[0];
-        const fileData = await readFileAsBase64(file);
-        
-        let iconData = null;
-        if (iconInput.files[0]) {
-            iconData = await readFileAsBase64(iconInput.files[0]);
-        }
-
-        // Build file path based on category
-        let filePath = getDataPath(category);
-        let homebrewSubcategory = null;
-        let virtualConsoleSubcategory = null;
+        // Build form data for server upload
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('name', titleName);
+        formData.append('titleId', titleId);
+        formData.append('productCode', productCode);
+        formData.append('category', category);
+        formData.append('region', region);
+        formData.append('description', description);
+        formData.append('uploadedBy', uploadedBy);
         
         if (category === 'homebrew') {
-            homebrewSubcategory = document.getElementById('homebrewCategory').value;
-            filePath += getHomebrewSubfolder(homebrewSubcategory);
+            formData.append('homebrewCategory', document.getElementById('homebrewCategory').value);
         } else if (category === 'virtual-console') {
-            virtualConsoleSubcategory = document.getElementById('virtualConsoleCategory').value;
-            filePath += getVirtualConsoleSubfolder(virtualConsoleSubcategory);
+            formData.append('vcSystem', document.getElementById('virtualConsoleCategory').value);
         }
+
+        // Upload to server (will be staged, decrypted if needed, then moved to final location)
+        const response = await fetch('/api/files/upload', {
+            method: 'POST',
+            body: formData
+        });
         
-        // Sanitize filename
-        const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        filePath += safeFileName;
-
-        const newFile = {
-            id: generateId(),
-            name: titleName,
-            titleId: titleId || generateTitleId(),
-            productCode: productCode || null,
-            category: category,
-            homebrewCategory: homebrewSubcategory,
-            vcSystem: virtualConsoleSubcategory,
-            region: region,
-            description: description,
-            uploadedBy: uploadedBy,
-            downloadCount: 0,
-            size: file.size,
-            fileName: file.name,
-            filePath: filePath,
-            fileData: fileData,
-            fileType: file.type,
-            icon: iconData,
-            fileUrl: URL.createObjectURL(file),
-            uploadDate: new Date().toISOString()
-        };
-
-        AppState.uploadedFiles.push(newFile);
-        saveUploadedFiles();
-
-        // Add to appropriate category
-        if (category === 'homebrew') {
-            newFile.category = homebrewSubcategory;
-            AppState.homebrew.push(newFile);
-        } else if (category === 'virtual-console') {
-            newFile.category = virtualConsoleSubcategory;
-            AppState.virtualConsole.push(newFile);
-        } else if (category === 'game') {
-            AppState.games.push(newFile);
-        } else if (category === 'dlc') {
-            AppState.dlc.push(newFile);
-        } else if (category === 'app') {
-            AppState.apps.push(newFile);
+        const result = await response.json();
+        
+        if (result.success) {
+            let message = `"${titleName}" uploaded successfully`;
+            if (result.decrypted) {
+                message += ' (decrypted)';
+            } else if (result.decryptionError) {
+                message += ` (decryption failed: ${result.decryptionError})`;
+            }
+            
+            showToast('Success', message);
+            document.getElementById('uploadForm').reset();
+            renderUploadedFiles();
+        } else {
+            showToast('Error', result.error || 'Upload failed');
         }
-
-        showToast('Success', `"${titleName}" saved to ${filePath}`);
-        document.getElementById('uploadForm').reset();
-        renderUploadedFiles();
 
     } catch (error) {
         console.error('Upload error:', error);

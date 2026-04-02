@@ -874,3 +874,138 @@ body.dark-mode .list-group-item {
 body.dark-mode .badge.bg-secondary {
     background-color: #4a4a6a !important;
 }
+
+/* Seeds Section Dark Mode */
+body.dark-mode .table-dark {
+    background-color: #1a1a2e;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .table-dark th {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    border-color: #2d2d44;
+}
+
+body.dark-mode #seedsTableBody {
+    background-color: #1e1e2f;
+}
+
+body.dark-mode #seedsTableBody tr {
+    background-color: #1e1e2f;
+    border-color: #2d2d44;
+}
+
+body.dark-mode #seedsTableBody tr:hover {
+    background-color: #252538;
+}
+
+body.dark-mode #seedsTableBody td {
+    background-color: #1e1e2f;
+    color: #e0e0e0;
+    border-color: #2d2d44;
+}
+
+body.dark-mode #seeds-section .card {
+    background-color: #1e1e2f;
+    border-color: #2d2d44;
+}
+
+body.dark-mode #seeds-section .card-body {
+    background-color: #1e1e2f;
+}
+
+body.dark-mode .table tbody tr {
+    background-color: #1e1e2f;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .table tbody tr:hover {
+    background-color: #252538;
+}
+
+body.dark-mode .table tbody code {
+    color: #7eb8ff;
+}
+
+body.dark-mode .badge.bg-success {
+    background-color: #1a5c3a !important;
+}
+
+body.dark-mode .pagination .page-link {
+    background-color: #252538;
+    border-color: #3d3d5c;
+    color: #e0e0e0;
+}
+
+body.dark-mode .pagination .page-link:hover {
+    background-color: #3d3d5c;
+    border-color: #4d4d6c;
+    color: #ffffff;
+}
+
+body.dark-mode .pagination .page-item.active .page-link {
+    background-color: var(--eshop-red);
+    border-color: var(--eshop-red);
+    color: #ffffff;
+}
+
+body.dark-mode .pagination .page-item.disabled .page-link {
+    background-color: #1e1e2f;
+    border-color: #2d2d44;
+    color: #606060;
+}
+
+body.dark-mode .btn-outline-success {
+    color: #4ecdc4;
+    border-color: #4ecdc4;
+}
+
+body.dark-mode .btn-outline-success:hover {
+    background-color: #4ecdc4;
+    color: #1a1a2e;
+}
+
+body.dark-mode #seeds-section .card.text-center h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .input-group-text {
+    background-color: #252538;
+    border-color: #3d3d5c;
+    color: #e0e0e0;
+}
+
+body.dark-mode #seedSearch {
+    background-color: #252538;
+    border-color: #3d3d5c;
+    color: #e0e0e0;
+}
+
+body.dark-mode #seedSearch::placeholder {
+    color: #808080;
+}
+
+body.dark-mode #seedSearch:focus {
+    background-color: #2d2d44;
+    border-color: var(--eshop-blue);
+    color: #e0e0e0;
+}
+
+/* Seed QR Modal Dark Mode */
+body.dark-mode #seedQrCodeContainer {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    display: inline-block;
+}
+
+body.dark-mode #seedQrModal .modal-body code {
+    color: #7eb8ff;
+}
+
+body.dark-mode #seedQrModal .alert-info {
+    background-color: #1a3a5c;
+    border-color: #2d5a8c;
+    color: #7eb8ff;
+}

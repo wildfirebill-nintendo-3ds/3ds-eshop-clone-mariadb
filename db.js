@@ -54,6 +54,8 @@ async function createTables() {
             filePath VARCHAR(500),
             fileType VARCHAR(100),
             sha256 VARCHAR(64),
+            originalSha256 VARCHAR(64),
+            wasDecrypted TINYINT(1) DEFAULT 0,
             uploadedBy VARCHAR(100) DEFAULT 'Anonymous',
             downloadCount INT DEFAULT 0,
             uploadDate DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -162,9 +164,9 @@ export const filesDB = {
         const id = file.id || uuidv4();
         await pool.query(`
             INSERT INTO files (id, name, titleId, productCode, category, homebrewCategory, vcSystem,
-                region, description, size, fileName, filePath, fileType, sha256, uploadedBy,
-                downloadCount, uploadDate, lastModified, icon)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
+                region, description, size, fileName, filePath, fileType, sha256, originalSha256, wasDecrypted,
+                uploadedBy, downloadCount, uploadDate, lastModified, icon)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
         `, [
             id,
             file.name,
@@ -180,6 +182,8 @@ export const filesDB = {
             file.filePath,
             file.fileType,
             file.sha256 ?? null,
+            file.originalSha256 ?? null,
+            file.wasDecrypted ? 1 : 0,
             file.uploadedBy ?? 'Anonymous',
             file.downloadCount ?? 0,
             file.icon ?? null

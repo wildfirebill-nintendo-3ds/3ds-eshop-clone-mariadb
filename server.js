@@ -22,6 +22,15 @@ import {
     seedsDB
 } from './db.js';
 
+import {
+    decryptFile,
+    moveToFinal,
+    checkTools,
+    STAGING_DIR,
+    DECRYPTED_DIR,
+    processUpload
+} from './decrypt.js';
+
 // ES Module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -53,7 +62,9 @@ const UPLOAD_DIRS = {
     apps: path.join(DATA_DIR, 'apps'),
     'virtual-console': path.join(DATA_DIR, 'virtual-console'),
     homebrew: path.join(DATA_DIR, 'homebrew'),
-    seeds: path.join(DATA_DIR, 'seeds')
+    seeds: path.join(DATA_DIR, 'seeds'),
+    staging: STAGING_DIR,
+    decrypted: DECRYPTED_DIR
 };
 
 for (const dir of Object.values(UPLOAD_DIRS)) {
@@ -73,19 +84,9 @@ async function addLog(action, details, user = 'system') {
 // ============================================
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const category = req.body.category || 'homebrew';
-        let uploadPath = UPLOAD_DIRS[category] || UPLOAD_DIRS.homebrew;
-
-        if (category === 'homebrew' && req.body.homebrewCategory) {
-            uploadPath = path.join(uploadPath, req.body.homebrewCategory);
-        }
-
-        if (category === 'virtual-console' && req.body.vcSystem) {
-            uploadPath = path.join(uploadPath, req.body.vcSystem);
-        }
-
-        if (!existsSync(uploadPath)) mkdirSync(uploadPath, { recursive: true });
-        cb(null, uploadPath);
+        // All uploads go to staging first
+        if (!existsSync(STAGING_DIR)) mkdirSync(STAGING_DIR, { recursive: true });
+        cb(null, STAGING_DIR);
     },
     filename: (req, file, cb) => {
         const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -220,7 +221,7 @@ app.get('/api/files/:id', async (req, res) => {
     }
 });
 
-// Upload file
+// Upload file - staged, then decrypted, then moved to final location
 app.post('/api/files/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -228,12 +229,66 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
         }
 
         const category = req.body.category || 'homebrew';
-        const relativePath = path.relative(__dirname, req.file.path).replace(/\\/g, '/');
-        const sha256 = await calculateFileHash(req.file.path);
-
+        const stagingPath = req.file.path;
+        const fileName = req.file.originalname;
+        const ext = path.extname(fileName).toLowerCase();
+        
+        // Determine final directory
+        let finalDir = UPLOAD_DIRS[category] || UPLOAD_DIRS.homebrew;
+        if (category === 'homebrew' && req.body.homebrewCategory) {
+            finalDir = path.join(finalDir, req.body.homebrewCategory);
+        }
+        if (category === 'virtual-console' && req.body.vcSystem) {
+            finalDir = path.join(finalDir, req.body.vcSystem);
+        }
+        
+        // Calculate original SHA256
+        const originalSha256 = await calculateFileHash(stagingPath);
+        
+        // Check if file needs decryption (CIA or 3DS)
+        let finalPath;
+        let decryptionResult = null;
+        const needsDecryption = ['.cia', '.3ds'].includes(ext);
+        
+        if (needsDecryption) {
+            console.log(`[Upload] Decrypting ${fileName}...`);
+            
+            // Create category subfolder in decrypted dir
+            const decryptCategoryDir = path.join(DECRYPTED_DIR, category);
+            if (!existsSync(decryptCategoryDir)) mkdirSync(decryptCategoryDir, { recursive: true });
+            
+            // Decrypt the file
+            decryptionResult = await decryptFile(stagingPath, fileName, category);
+            
+            if (decryptionResult.success) {
+                // Move decrypted file to final location
+                finalPath = await moveToFinal(decryptionResult.path, finalDir, fileName);
+                console.log(`[Upload] Decrypted and moved to: ${finalPath}`);
+            } else {
+                // Decryption failed, move original to final location
+                console.log(`[Upload] Decryption failed: ${decryptionResult.error}. Using original file.`);
+                if (!existsSync(finalDir)) mkdirSync(finalDir, { recursive: true });
+                finalPath = path.join(finalDir, fileName);
+                await fs.copyFile(stagingPath, finalPath);
+            }
+            
+            // Clean up staging file
+            await fs.unlink(stagingPath);
+        } else {
+            // No decryption needed, move directly to final location
+            if (!existsSync(finalDir)) mkdirSync(finalDir, { recursive: true });
+            finalPath = path.join(finalDir, fileName);
+            await fs.copyFile(stagingPath, finalPath);
+            await fs.unlink(stagingPath);
+        }
+        
+        const relativePath = path.relative(__dirname, finalPath).replace(/\\/g, '/');
+        const finalStats = await fs.stat(finalPath);
+        const finalSha256 = await calculateFileHash(finalPath);
+        
         const newFile = {
             id: uuidv4(),
-            name: req.body.name || path.parse(req.file.originalname).name,
+            name: req.body.name || path.parse(fileName).name,
             titleId: req.body.titleId || generateTitleId(),
             productCode: req.body.productCode ?? null,
             category,
@@ -241,11 +296,13 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
             vcSystem: req.body.vcSystem ?? null,
             region: req.body.region || 'region-global',
             description: req.body.description ?? '',
-            size: req.file.size,
-            fileName: req.file.originalname,
+            size: finalStats.size,
+            fileName: fileName,
             filePath: relativePath,
             fileType: req.file.mimetype,
-            sha256,
+            sha256: finalSha256,
+            originalSha256: needsDecryption ? originalSha256 : null,
+            wasDecrypted: needsDecryption && decryptionResult?.success,
             uploadedBy: req.body.uploadedBy || 'Anonymous',
             downloadCount: 0,
             icon: req.body.icon ?? null
@@ -258,14 +315,21 @@ app.post('/api/files/upload', upload.single('file'), async (req, res) => {
             fileName: newFile.name,
             category: newFile.category,
             size: newFile.size,
-            sha256,
+            sha256: finalSha256,
+            wasDecrypted: newFile.wasDecrypted,
+            decryptionError: decryptionResult?.error || null,
             uploadedBy: newFile.uploadedBy,
             ip: req.ip
         }, newFile.uploadedBy);
 
         await statsDB.update('upload', category);
 
-        res.json({ success: true, data: newFile });
+        res.json({ 
+            success: true, 
+            data: newFile,
+            decrypted: newFile.wasDecrypted,
+            decryptionError: decryptionResult?.error || null
+        });
     } catch (error) {
         console.error('Upload error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -575,6 +639,26 @@ app.get('/api/seeds/:titleId/qr', (req, res) => {
                 downloadUrl,
                 fbiPath: `sd:/fbi/seed/${titleId}.dat`
             }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// Decryption API Routes
+// ============================================
+
+// Check decryptor tools status
+app.get('/api/decrypt/tools', async (req, res) => {
+    try {
+        const tools = await checkTools();
+        const allInstalled = Object.values(tools).every(t => t.installed);
+        
+        res.json({
+            success: true,
+            allInstalled,
+            tools
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
