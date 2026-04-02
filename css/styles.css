@@ -1,0 +1,853 @@
+/* 3DS eShop Clone - Custom Styles */
+
+:root {
+    --eshop-red: #e60012;
+    --eshop-blue: #0066cc;
+    --eshop-dark-blue: #003366;
+    --eshop-light-gray: #f5f5f5;
+    --eshop-orange: #ff6600;
+    --eshop-green: #00a651;
+    --card-radius: 12px;
+}
+
+/* Base Styles */
+body {
+    background: linear-gradient(180deg, #e8f4fc 0%, #f0f0f0 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, var(--eshop-red) 0%, #cc0000 100%) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    margin: 0 2px;
+    transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Section Titles */
+.section-title {
+    color: var(--eshop-dark-blue);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--eshop-red);
+    display: inline-block;
+}
+
+/* Game/Title Cards */
+.title-card {
+    background: white;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    height: 100%;
+}
+
+.title-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.title-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.title-card .card-body {
+    padding: 0.75rem;
+}
+
+.title-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.title-card .card-text {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* Region Badges */
+.badge-region {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.badge-usa { background-color: #003366; }
+.badge-eur { background-color: #003399; }
+.badge-jpn { background-color: #cc0000; }
+.badge-global { background-color: #00a651; }
+
+/* Category Badges */
+.badge-game { background-color: var(--eshop-blue); }
+.badge-dlc { background-color: var(--eshop-orange); }
+.badge-app { background-color: var(--eshop-green); }
+.badge-virtual-console { background-color: #6f42c1; }
+.badge-homebrew { background-color: #9b59b6; }
+.badge-homebrew { background-color: #9b59b6; }
+
+/* Featured Banners */
+.featured-banner {
+    height: 250px;
+    border-radius: var(--card-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.featured-content {
+    padding: 2rem;
+}
+
+.featured-content h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.featured-content p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+/* Carousel */
+.carousel-inner {
+    border-radius: var(--card-radius);
+}
+
+.carousel-indicators button {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    margin: 0 5px !important;
+}
+
+/* Homebrew Categories */
+.list-group-item {
+    border-radius: 8px !important;
+    margin-bottom: 0.25rem;
+    border: none;
+    background-color: #f8f9fa;
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background-color: #e9ecef;
+}
+
+.list-group-item.active {
+    background-color: var(--eshop-red);
+    border-color: var(--eshop-red);
+}
+
+/* QR Code Modal */
+#qrCodeContainer {
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+#qrCodeContainer canvas {
+    border-radius: 8px;
+}
+
+/* Upload Form */
+#uploadForm .form-control,
+#uploadForm .form-select {
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    padding: 0.75rem 1rem;
+}
+
+#uploadForm .form-control:focus,
+#uploadForm .form-select:focus {
+    border-color: var(--eshop-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+/* Tables */
+.table {
+    border-radius: var(--card-radius);
+    overflow: hidden;
+}
+
+.table thead {
+    background: linear-gradient(135deg, var(--eshop-dark-blue) 0%, #004488 100%);
+}
+
+.table tbody tr {
+    transition: background-color 0.3s;
+}
+
+.table tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--eshop-blue) 0%, #0055aa 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--eshop-green) 0%, #008c44 100%);
+    border: none;
+    border-radius: 8px;
+}
+
+.btn-outline-primary {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-outline-primary.active {
+    background-color: var(--eshop-blue);
+    border-color: var(--eshop-blue);
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--card-radius);
+    border: none;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--card-radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Guide Section */
+#guideContent {
+    min-height: 400px;
+}
+
+#guideContent h3 {
+    color: var(--eshop-dark-blue);
+    border-bottom: 2px solid var(--eshop-red);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#guideContent h4 {
+    color: var(--eshop-blue);
+    margin-top: 1.5rem;
+}
+
+#guideContent .step {
+    background: #f8f9fa;
+    border-left: 4px solid var(--eshop-blue);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 8px 8px 0;
+}
+
+#guideContent code {
+    background: #e9ecef;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--eshop-red);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Toast */
+.toast {
+    border-radius: var(--card-radius);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .featured-banner {
+        height: 180px;
+    }
+
+    .featured-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .featured-content p {
+        font-size: 1rem;
+    }
+
+    .title-card .card-img-top {
+        height: 120px;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+    }
+
+    .navbar-brand span {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .featured-banner {
+        height: 150px;
+    }
+
+    .featured-content h2 {
+        font-size: 1.25rem;
+    }
+
+    .title-card .card-title {
+        font-size: 0.8rem;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.title-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Action Buttons in Cards */
+.title-card .action-buttons {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.title-card:hover .action-buttons {
+    opacity: 1;
+}
+
+.title-card .action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Filter Buttons */
+.btn-group .btn {
+    border-radius: 20px !important;
+    margin: 0 2px;
+    padding: 0.375rem 1rem;
+}
+
+.btn-group .btn:first-child {
+    border-radius: 20px 0 0 20px !important;
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 20px 20px 0 !important;
+}
+
+/* Icon Placeholder */
+.icon-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* File Size */
+.file-size {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* QR Badge */
+.qr-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+/* Admin Badge */
+#adminBadge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Login Modal */
+#loginModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+#loginModal .modal-header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#loginModal .input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+#loginModal .form-control {
+    border-left: none;
+}
+
+#loginModal .form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+#loginModal code {
+    background: #e9ecef;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    color: var(--eshop-red);
+}
+
+/* Admin Only Controls */
+.admin-only {
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.admin-only.d-none {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Auth Controls */
+#authControls {
+    min-width: 150px;
+    justify-content: flex-end;
+}
+
+/* Disabled State for Non-Admin */
+.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Admin Panel Styling */
+.admin-panel {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-panel h6 {
+    color: #856404;
+    margin-bottom: 0.5rem;
+}
+
+/* User Info Display */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.user-info i {
+    font-size: 1.2rem;
+}
+
+/* Toast Enhancements */
+.toast.toast-success .toast-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.toast.toast-error .toast-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.toast.toast-warning .toast-header {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: #333;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+body.dark-mode {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    color: #e0e0e0;
+}
+
+body.dark-mode .navbar {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%) !important;
+}
+
+body.dark-mode .card {
+    background-color: #1e1e2f;
+    border: 1px solid #2d2d44;
+    color: #e0e0e0;
+}
+
+body.dark-mode .card.bg-light {
+    background-color: #252538 !important;
+    border: 1px solid #3d3d5c;
+}
+
+body.dark-mode .card-body {
+    color: #e0e0e0;
+}
+
+body.dark-mode .title-card {
+    background: #1e1e2f;
+    color: #e0e0e0;
+}
+
+body.dark-mode .title-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .card-title {
+    color: #ffffff;
+}
+
+body.dark-mode .card-text {
+    color: #a0a0a0;
+}
+
+body.dark-mode .section-title {
+    color: #7eb8ff;
+    border-bottom-color: #e60012;
+}
+
+body.dark-mode .featured-content h2,
+body.dark-mode .featured-content p {
+    color: #ffffff;
+}
+
+body.dark-mode .list-group-item {
+    background-color: #252538;
+    color: #e0e0e0;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .list-group-item:hover {
+    background-color: #2d2d44;
+}
+
+body.dark-mode .list-group-item.active {
+    background-color: var(--eshop-red);
+    border-color: var(--eshop-red);
+}
+
+body.dark-mode .table {
+    color: #e0e0e0;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+    background-color: #252538;
+}
+
+body.dark-mode .table tbody tr {
+    border-color: #2d2d44;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #252538;
+    border-color: #2d2d44;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #2d2d44;
+    border-color: var(--eshop-blue);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-control::placeholder {
+    color: #808080;
+}
+
+body.dark-mode .input-group-text {
+    background-color: #252538;
+    border-color: #2d2d44;
+    color: #e0e0e0;
+}
+
+body.dark-mode .alert {
+    background-color: #252538;
+    border-color: #2d2d44;
+    color: #e0e0e0;
+}
+
+body.dark-mode .alert-info {
+    background-color: #1a3a5c;
+    border-color: #2d5a8c;
+    color: #7eb8ff;
+}
+
+body.dark-mode .alert-warning {
+    background-color: #4a3d1a;
+    border-color: #6b5a2a;
+    color: #ffc107;
+}
+
+body.dark-mode .alert-danger {
+    background-color: #4a1a1a;
+    border-color: #6b2a2a;
+    color: #ff6b6b;
+}
+
+body.dark-mode .modal-content {
+    background-color: #1e1e2f;
+    border: 1px solid #2d2d44;
+    color: #e0e0e0;
+}
+
+body.dark-mode .modal-header {
+    border-bottom-color: #2d2d44;
+}
+
+body.dark-mode .modal-footer {
+    border-top-color: #2d2d44;
+}
+
+body.dark-mode .modal-title {
+    color: #ffffff;
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1);
+}
+
+body.dark-mode .toast {
+    background-color: #252538;
+    border: 1px solid #2d2d44;
+}
+
+body.dark-mode .toast-header {
+    background-color: #1e1e2f;
+    color: #e0e0e0;
+    border-bottom-color: #2d2d44;
+}
+
+body.dark-mode .toast-body {
+    color: #e0e0e0;
+}
+
+body.dark-mode .text-muted {
+    color: #808080 !important;
+}
+
+body.dark-mode code {
+    background-color: #252538;
+    color: #7eb8ff;
+}
+
+body.dark-mode .empty-state {
+    color: #606060;
+}
+
+body.dark-mode .badge-usa {
+    background-color: #1a3a6c;
+}
+
+body.dark-mode .badge-eur {
+    background-color: #1a3a99;
+}
+
+body.dark-mode .badge-jpn {
+    background-color: #6c1a1a;
+}
+
+body.dark-mode .list-group-item.active {
+    background-color: var(--eshop-red);
+}
+
+body.dark-mode hr {
+    border-color: #2d2d44;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #1e1e2f;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .dropdown-item {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #252538;
+}
+
+body.dark-mode #guideContent h3 {
+    color: #7eb8ff;
+}
+
+body.dark-mode #guideContent h4 {
+    color: #5ba3e6;
+}
+
+body.dark-mode #guideContent .step {
+    background: #252538;
+    border-left-color: var(--eshop-blue);
+}
+
+body.dark-mode .btn-outline-primary {
+    color: #7eb8ff;
+    border-color: #7eb8ff;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    background-color: var(--eshop-blue);
+    color: #ffffff;
+}
+
+body.dark-mode .btn-outline-primary.active {
+    background-color: var(--eshop-blue);
+    border-color: var(--eshop-blue);
+    color: #ffffff;
+}
+
+body.dark-mode .btn-outline-light {
+    color: #e0e0e0;
+    border-color: #e0e0e0;
+}
+
+body.dark-mode .btn-outline-light:hover {
+    background-color: #e0e0e0;
+    color: #1a1a2e;
+}
+
+body.dark-mode .carousel-control-prev-icon,
+body.dark-mode .carousel-control-next-icon {
+    filter: invert(1);
+}
+
+body.dark-mode .carousel-indicators button {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+body.dark-mode .carousel-indicators button.active {
+    background-color: #ffffff;
+}

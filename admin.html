@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DS eShop - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --eshop-red: #e60012;
+            --eshop-blue: #0066cc;
+            --dark-bg: #1a1a2e;
+            --dark-card: #1e1e2f;
+            --dark-border: #2d2d44;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background: var(--dark-card);
+            min-height: 100vh;
+            border-right: 1px solid var(--dark-border);
+            position: fixed;
+            width: 250px;
+            padding-top: 1rem;
+        }
+        
+        .sidebar .nav-link {
+            color: #a0a0a0;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: var(--eshop-red);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .stat-card .stat-label {
+            color: #808080;
+            font-size: 0.9rem;
+        }
+        
+        .card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            color: #e0e0e0;
+        }
+        
+        .card-header {
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--dark-border);
+        }
+        
+        .table {
+            color: #e0e0e0;
+        }
+        
+        .table thead th {
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--dark-border);
+            color: #ffffff;
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid var(--dark-border);
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .form-control, .form-select {
+            background: #252538;
+            border-color: var(--dark-border);
+            color: #e0e0e0;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: #2d2d44;
+            border-color: var(--eshop-blue);
+            color: #e0e0e0;
+            box-shadow: none;
+        }
+        
+        .btn-primary {
+            background: var(--eshop-blue);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: var(--eshop-red);
+            border: none;
+        }
+        
+        .badge-game { background-color: var(--eshop-blue); }
+        .badge-dlc { background-color: #ff6600; }
+        .badge-app { background-color: #00a651; }
+        .badge-virtual-console { background-color: #6f42c1; }
+        .badge-homebrew { background-color: #9b59b6; }
+        
+        .log-entry {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--dark-border);
+            font-size: 0.85rem;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-time {
+            color: #808080;
+            font-size: 0.75rem;
+        }
+        
+        .log-action {
+            font-weight: 600;
+        }
+        
+        .log-action.upload { color: #00a651; }
+        .log-action.download { color: var(--eshop-blue); }
+        .log-action.delete { color: var(--eshop-red); }
+        .log-action.update { color: #ffc107; }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .modal-content {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            color: #e0e0e0;
+        }
+        
+        .modal-header {
+            border-bottom-color: var(--dark-border);
+        }
+        
+        .modal-footer {
+            border-top-color: var(--dark-border);
+        }
+        
+        .btn-close {
+            filter: invert(1);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="px-3 mb-4">
+            <h5 class="text-white"><i class="bi bi-shield-lock"></i> Admin Panel</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-panel="dashboard">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-panel="files">
+                    <i class="bi bi-files"></i> Manage Files
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-panel="logs">
+                    <i class="bi bi-journal-text"></i> Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-panel="stats">
+                    <i class="bi bi-bar-chart"></i> Statistics
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="index.html">
+                    <i class="bi bi-arrow-left"></i> Back to eShop
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Panel -->
+        <div id="dashboard-panel" class="panel">
+            <h2 class="mb-4">Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-value" id="totalFiles">0</div>
+                                <div class="stat-label">Total Files</div>
+                            </div>
+                            <i class="bi bi-files stat-icon text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-value" id="totalDownloads">0</div>
+                                <div class="stat-label">Total Downloads</div>
+                            </div>
+                            <i class="bi bi-download stat-icon text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-value" id="totalUsers">0</div>
+                                <div class="stat-label">Uploaders</div>
+                            </div>
+                            <i class="bi bi-people stat-icon text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-value" id="todayUploads">0</div>
+                                <div class="stat-label">Today's Uploads</div>
+                            </div>
+                            <i class="bi bi-cloud-upload stat-icon text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Uploads & Downloads (Last 7 Days)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="activityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Files by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploads by User Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Uploads by User</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="userChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Activity</h5>
+                        </div>
+                        <div class="card-body p-0" id="recentLogs" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Logs populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-trophy"></i> Top Downloaded</h5>
+                        </div>
+                        <div class="card-body p-0" id="topDownloaded" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Top files populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Panel -->
+        <div id="files-panel" class="panel d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Manage Files</h2>
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="fileSearch" placeholder="Search files..." style="width: 250px;">
+                    <select class="form-select" id="fileCategoryFilter" style="width: 150px;">
+                        <option value="all">All Categories</option>
+                        <option value="game">Games</option>
+                        <option value="dlc">DLC</option>
+                        <option value="app">Apps</option>
+                        <option value="virtual-console">Virtual Console</option>
+                        <option value="homebrew">Homebrew</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Uploaded By</th>
+                                    <th>Downloads</th>
+                                    <th>SHA256</th>
+                                    <th>Size</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filesTableBody">
+                                <!-- Files populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center" id="filesPagination">
+                    <!-- Pagination populated by JS -->
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Logs Panel -->
+        <div id="logs-panel" class="panel d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Activity Logs</h2>
+                <div class="d-flex gap-2">
+                    <select class="form-select" id="logActionFilter" style="width: 180px;">
+                        <option value="">All Actions</option>
+                        <option value="FILE_UPLOAD">Uploads</option>
+                        <option value="FILE_DOWNLOAD">Downloads</option>
+                        <option value="FILE_UPDATE">Updates</option>
+                        <option value="FILE_DELETE">Deletions</option>
+                    </select>
+                    <input type="text" class="form-control" id="logUserFilter" placeholder="Filter by user..." style="width: 200px;">
+                    <button class="btn btn-danger" onclick="clearLogs()">
+                        <i class="bi bi-trash"></i> Clear Logs
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>User</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <!-- Logs populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center" id="logsPagination">
+                    <!-- Pagination populated by JS -->
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Stats Panel -->
+        <div id="stats-panel" class="panel d-none">
+            <h2 class="mb-4">Detailed Statistics</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-person"></i> Uploaders Leaderboard</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>User</th>
+                                        <th>Uploads</th>
+                                        <th>Downloads</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardBody">
+                                    <!-- Leaderboard populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-download"></i> Most Downloaded</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>File</th>
+                                        <th>Category</th>
+                                        <th>Downloads</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mostDownloadedBody">
+                                    <!-- Most downloaded populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Downloads by User</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="downloadsByUserChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit File Modal -->
+    <div class="modal fade" id="editFileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editFileForm">
+                        <input type="hidden" id="editFileId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" id="editFileName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Title ID</label>
+                                <input type="text" class="form-control" id="editFileTitleId">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Product Code</label>
+                                <input type="text" class="form-control" id="editFileProductCode" placeholder="e.g., CTR-P-AGDE">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="editFileCategory">
+                                    <option value="game">Game</option>
+                                    <option value="dlc">DLC</option>
+                                    <option value="app">Application</option>
+                                    <option value="virtual-console">Virtual Console</option>
+                                    <option value="homebrew">Homebrew</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Region</label>
+                                <select class="form-select" id="editFileRegion">
+                                    <option value="region-usa">USA</option>
+                                    <option value="region-eur">EUR</option>
+                                    <option value="region-jpn">JPN</option>
+                                    <option value="region-global">Global</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editFileDescription" rows="3"></textarea>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Uploaded By</label>
+                                <input type="text" class="form-control" id="editFileUploadedBy">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Icon URL</label>
+                                <input type="text" class="form-control" id="editFileIcon" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            File: <code id="editFilePath"></code> | Size: <code id="editFileSize"></code> | Downloads: <code id="editFileDownloads"></code>
+                            <br>SHA256: <code id="editFileSha256" class="small" style="word-break: break-all;"></code>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFileEdit()">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="adminToast" class="toast" role="alert">
+            <div class="toast-header bg-dark text-white">
+                <i class="bi bi-bell-fill me-2"></i>
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // State
+        // ============================================
+        const state = {
+            currentPanel: 'dashboard',
+            filesPage: 1,
+            logsPage: 1,
+            charts: {}
+        };
+
+        // ============================================
+        // API Helper
+        // ============================================
+        async function api(endpoint, options = {}) {
+            try {
+                const response = await fetch(`/api${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    body: options.body ? JSON.stringify(options.body) : undefined
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // ============================================
+        // Navigation
+        // ============================================
+        document.querySelectorAll('[data-panel]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const panel = e.currentTarget.dataset.panel;
+                showPanel(panel);
+                
+                document.querySelectorAll('[data-panel]').forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+            });
+        });
+
+        function showPanel(panel) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('d-none'));
+            document.getElementById(`${panel}-panel`)?.classList.remove('d-none');
+            state.currentPanel = panel;
+            
+            // Load panel data
+            if (panel === 'dashboard') loadDashboard();
+            if (panel === 'files') loadFiles();
+            if (panel === 'logs') loadLogs();
+            if (panel === 'stats') loadStats();
+        }
+
+        // ============================================
+        // Dashboard
+        // ============================================
+        async function loadDashboard() {
+            const result = await api('/stats');
+            if (!result.success) return;
+            
+            const { data } = result;
+            
+            // Update stat cards
+            document.getElementById('totalFiles').textContent = data.totalFiles;
+            document.getElementById('totalDownloads').textContent = data.totalDownloads;
+            document.getElementById('totalUsers').textContent = Object.keys(data.byUser).length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayLog = data.recentLogs.filter(l => l.timestamp?.startsWith(today) && l.action === 'FILE_UPLOAD');
+            document.getElementById('todayUploads').textContent = todayLog.length;
+            
+            // Render activity chart
+            renderActivityChart(data.dailyStats);
+            
+            // Render category chart
+            renderCategoryChart(data.byCategory);
+            
+            // Render user chart
+            renderUserChart(data.byUser);
+            
+            // Render recent logs
+            renderRecentLogs(data.recentLogs);
+            
+            // Render top downloaded
+            renderTopDownloaded(data.topDownloaded);
+        }
+
+        function renderActivityChart(dailyStats) {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            
+            if (state.charts.activity) state.charts.activity.destroy();
+            
+            state.charts.activity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyStats.map(d => d.label),
+                    datasets: [
+                        {
+                            label: 'Uploads',
+                            data: dailyStats.map(d => d.uploads),
+                            borderColor: '#00a651',
+                            backgroundColor: 'rgba(0, 166, 81, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Downloads',
+                            data: dailyStats.map(d => d.downloads),
+                            borderColor: '#0066cc',
+                            backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryChart(byCategory) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (state.charts.category) state.charts.category.destroy();
+            
+            const colors = {
+                game: '#0066cc',
+                dlc: '#ff6600',
+                app: '#00a651',
+                'virtual-console': '#6f42c1',
+                homebrew: '#9b59b6'
+            };
+            
+            state.charts.category = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(byCategory).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+                    datasets: [{
+                        data: Object.values(byCategory),
+                        backgroundColor: Object.keys(byCategory).map(k => colors[k] || '#888')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderUserChart(byUser) {
+            const ctx = document.getElementById('userChart').getContext('2d');
+            
+            if (state.charts.user) state.charts.user.destroy();
+            
+            const sorted = Object.entries(byUser)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            state.charts.user = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(([name]) => name),
+                    datasets: [{
+                        label: 'Uploads',
+                        data: sorted.map(([, count]) => count),
+                        backgroundColor: '#0066cc'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRecentLogs(logs) {
+            const container = document.getElementById('recentLogs');
+            container.innerHTML = logs.map(log => {
+                const actionClass = log.action.includes('UPLOAD') ? 'upload' :
+                                   log.action.includes('DOWNLOAD') ? 'download' :
+                                   log.action.includes('DELETE') ? 'delete' : 'update';
+                const time = new Date(log.timestamp).toLocaleString();
+                return `
+                    <div class="log-entry">
+                        <div class="d-flex justify-content-between">
+                            <span class="log-action ${actionClass}">${log.action.replace('FILE_', '')}</span>
+                            <span class="log-time">${time}</span>
+                        </div>
+                        <div class="small text-muted">${log.details?.fileName || 'N/A'} - by ${log.user}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTopDownloaded(files) {
+            const container = document.getElementById('topDownloaded');
+            container.innerHTML = files.map((file, i) => `
+                <div class="log-entry">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-secondary me-2">#${i + 1}</span>
+                            <strong>${file.name}</strong>
+                        </div>
+                        <span class="badge bg-success">${file.downloadCount || 0} downloads</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // Files Management
+        // ============================================
+        async function loadFiles(page = 1) {
+            const search = document.getElementById('fileSearch').value;
+            const category = document.getElementById('fileCategoryFilter').value;
+            
+            const result = await api(`/files?page=${page}&limit=20&category=${category}&search=${search}`);
+            if (!result.success) return;
+            
+            state.filesPage = page;
+            renderFilesTable(result.data);
+            renderPagination('filesPagination', result.pagination, loadFiles);
+        }
+
+        function renderFilesTable(files) {
+            const tbody = document.getElementById('filesTableBody');
+            tbody.innerHTML = files.map(file => `
+                <tr>
+                    <td>
+                        <strong>${file.name}</strong>
+                        <br><small class="text-muted">${file.titleId || 'N/A'}</small>
+                    </td>
+                    <td><span class="badge badge-${file.category}">${file.category}</span></td>
+                    <td>${file.uploadedBy || 'Anonymous'}</td>
+                    <td>
+                        <span class="badge bg-success">${file.downloadCount || 0}</span>
+                    </td>
+                    <td>
+                        <code class="small" style="font-size: 0.7rem;" title="${file.sha256 || 'N/A'}">
+                            ${file.sha256 ? file.sha256.substring(0, 16) + '...' : 'N/A'}
+                        </code>
+                    </td>
+                    <td>${formatSizeWithBlocks(file.size)}</td>
+                    <td>${new Date(file.uploadDate).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editFile('${file.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteFile('${file.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination(containerId, pagination, loadFunc) {
+            const container = document.getElementById(containerId);
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            for (let i = 1; i <= pagination.pages; i++) {
+                html += `
+                    <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="${loadFunc.name}(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        async function editFile(id) {
+            const result = await api(`/files/${id}`);
+            if (!result.success) {
+                showToast('Error', 'File not found');
+                return;
+            }
+            
+            const file = result.data;
+            document.getElementById('editFileId').value = file.id;
+            document.getElementById('editFileName').value = file.name;
+            document.getElementById('editFileTitleId').value = file.titleId || '';
+            document.getElementById('editFileProductCode').value = file.productCode || '';
+            document.getElementById('editFileCategory').value = file.category;
+            document.getElementById('editFileRegion').value = file.region;
+            document.getElementById('editFileDescription').value = file.description || '';
+            document.getElementById('editFileUploadedBy').value = file.uploadedBy || '';
+            document.getElementById('editFileIcon').value = file.icon || '';
+            document.getElementById('editFilePath').textContent = file.filePath;
+            document.getElementById('editFileSize').textContent = formatSizeWithBlocks(file.size);
+            document.getElementById('editFileDownloads').textContent = file.downloadCount || 0;
+            document.getElementById('editFileSha256').textContent = file.sha256 || 'N/A';
+            
+            new bootstrap.Modal(document.getElementById('editFileModal')).show();
+        }
+
+        async function saveFileEdit() {
+            const id = document.getElementById('editFileId').value;
+            const data = {
+                name: document.getElementById('editFileName').value,
+                titleId: document.getElementById('editFileTitleId').value,
+                productCode: document.getElementById('editFileProductCode').value,
+                category: document.getElementById('editFileCategory').value,
+                region: document.getElementById('editFileRegion').value,
+                description: document.getElementById('editFileDescription').value,
+                uploadedBy: document.getElementById('editFileUploadedBy').value,
+                icon: document.getElementById('editFileIcon').value,
+                adminUser: 'admin'
+            };
+            
+            const result = await api(`/files/${id}`, {
+                method: 'PUT',
+                body: data
+            });
+            
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('editFileModal')).hide();
+                showToast('Success', 'File updated successfully');
+                loadFiles(state.filesPage);
+            } else {
+                showToast('Error', result.error);
+            }
+        }
+
+        async function deleteFile(id) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            
+            const result = await api(`/files/${id}?adminUser=admin`, {
+                method: 'DELETE'
+            });
+            
+            if (result.success) {
+                showToast('Success', 'File deleted');
+                loadFiles(state.filesPage);
+            } else {
+                showToast('Error', result.error);
+            }
+        }
+
+        // ============================================
+        // Logs
+        // ============================================
+        async function loadLogs(page = 1) {
+            const action = document.getElementById('logActionFilter').value;
+            const user = document.getElementById('logUserFilter').value;
+            
+            const result = await api(`/logs?page=${page}&limit=50&action=${action}&user=${user}`);
+            if (!result.success) return;
+            
+            state.logsPage = page;
+            renderLogsTable(result.data);
+            renderPagination('logsPagination', result.pagination, loadLogs);
+        }
+
+        function renderLogsTable(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = logs.map(log => {
+                const actionClass = log.action.includes('UPLOAD') ? 'upload' :
+                                   log.action.includes('DOWNLOAD') ? 'download' :
+                                   log.action.includes('DELETE') ? 'delete' : 'update';
+                return `
+                    <tr>
+                        <td><small>${new Date(log.timestamp).toLocaleString()}</small></td>
+                        <td><span class="log-action ${actionClass}">${log.action.replace('FILE_', '')}</span></td>
+                        <td>${log.user}</td>
+                        <td><small class="text-muted">${JSON.stringify(log.details).substring(0, 100)}...</small></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function clearLogs() {
+            if (!confirm('Are you sure you want to clear all logs?')) return;
+            
+            const result = await api('/logs?adminUser=admin', {
+                method: 'DELETE'
+            });
+            
+            if (result.success) {
+                showToast('Success', 'Logs cleared');
+                loadLogs();
+            }
+        }
+
+        // ============================================
+        // Stats
+        // ============================================
+        async function loadStats() {
+            const result = await api('/stats');
+            if (!result.success) return;
+            
+            const { data } = result;
+            
+            // Leaderboard
+            const leaderboard = Object.entries(data.byUser)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            document.getElementById('leaderboardBody').innerHTML = leaderboard.map(([user, count], i) => {
+                const userFiles = data.topDownloaded.filter(f => f.uploadedBy === user);
+                const downloads = userFiles.reduce((sum, f) => sum + (f.downloadCount || 0), 0);
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${user}</td>
+                        <td>${count}</td>
+                        <td>${downloads}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Most downloaded
+            document.getElementById('mostDownloadedBody').innerHTML = data.topDownloaded.slice(0, 10).map((file, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${file.name}</td>
+                    <td><span class="badge badge-${file.category}">${file.category}</span></td>
+                    <td><span class="badge bg-success">${file.downloadCount || 0}</span></td>
+                </tr>
+            `).join('');
+            
+            // Downloads by user chart
+            renderDownloadsByUserChart(data.byUser, data.topDownloaded);
+        }
+
+        function renderDownloadsByUserChart(byUser, topDownloaded) {
+            const ctx = document.getElementById('downloadsByUserChart').getContext('2d');
+            
+            if (state.charts.downloadsByUser) state.charts.downloadsByUser.destroy();
+            
+            const userDownloads = {};
+            topDownloaded.forEach(file => {
+                const user = file.uploadedBy || 'Anonymous';
+                userDownloads[user] = (userDownloads[user] || 0) + (file.downloadCount || 0);
+            });
+            
+            const sorted = Object.entries(userDownloads)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            state.charts.downloadsByUser = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(([name]) => name),
+                    datasets: [{
+                        label: 'Downloads',
+                        data: sorted.map(([, count]) => count),
+                        backgroundColor: '#00a651'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // Utilities
+        // ============================================
+        function formatFileSize(bytes) {
+            if (!bytes) return 'Unknown';
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+        }
+
+        function bytesToBlocks(bytes) {
+            if (!bytes) return '0';
+            return Math.ceil(bytes / 131072).toLocaleString();
+        }
+
+        function formatSizeWithBlocks(bytes) {
+            if (!bytes) return 'Unknown';
+            return `${formatFileSize(bytes)} (${bytesToBlocks(bytes)} blocks)`;
+        }
+
+        function showToast(title, message) {
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastBody').textContent = message;
+            new bootstrap.Toast(document.getElementById('adminToast')).show();
+        }
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+        document.getElementById('fileSearch')?.addEventListener('input', () => loadFiles());
+        document.getElementById('fileCategoryFilter')?.addEventListener('change', () => loadFiles());
+        document.getElementById('logActionFilter')?.addEventListener('change', () => loadLogs());
+        document.getElementById('logUserFilter')?.addEventListener('input', () => loadLogs());
+
+        // ============================================
+        // Initialize
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DS eShop Clone</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <span>3DS eShop</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-section="home">
+                            <i class="bi bi-house-fill"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="games">
+                            <i class="bi bi-controller"></i> Games
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="dlc">
+                            <i class="bi bi-plus-circle"></i> DLC
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="apps">
+                            <i class="bi bi-app"></i> Apps
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="virtual-console">
+                            <i class="bi bi-joystick"></i> Virtual Console
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="homebrew">
+                            <i class="bi bi-code-square"></i> Homebrew
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="guide">
+                            <i class="bi bi-book"></i> Hack Guide
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="seeds">
+                            <i class="bi bi-key"></i> Seeds
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="upload">
+                            <i class="bi bi-cloud-upload"></i> Upload
+                        </a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm me-2" id="darkModeToggle" title="Toggle Dark Mode">
+                    <i class="bi bi-moon-fill" id="darkModeIcon"></i>
+                </button>
+                <form class="d-flex me-2" id="searchForm">
+                    <input class="form-control me-2" type="search" placeholder="Search titles..." id="searchInput">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <div class="d-flex align-items-center" id="authControls">
+                    <a href="admin.html" class="btn btn-outline-light btn-sm me-2 d-none" id="adminPanelBtn" title="Admin Panel">
+                        <i class="bi bi-speedometer2"></i>
+                    </a>
+                    <span id="adminBadge" class="badge bg-warning text-dark me-2 d-none">
+                        <i class="bi bi-shield-check"></i> Admin
+                    </span>
+                    <button class="btn btn-outline-light btn-sm" id="loginLogoutBtn" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <!-- Home Section -->
+        <section id="home-section" class="section-content">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="0" class="active"></button>
+                            <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="1"></button>
+                            <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="2"></button>
+                        </div>
+                        <div class="carousel-inner rounded-4">
+                            <div class="carousel-item active">
+                                <div class="featured-banner bg-gradient-primary">
+                                    <div class="featured-content">
+                                        <h2>Welcome to 3DS eShop Clone</h2>
+                                        <p>Your one-stop destination for 3DS games, DLC, apps, and homebrew</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="featured-banner bg-gradient-success">
+                                    <div class="featured-content">
+                                        <h2>QR Code Downloads</h2>
+                                        <p>Scan QR codes with FBI to install directly to your 3DS</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="featured-banner bg-gradient-info">
+                                    <div class="featured-content">
+                                        <h2>Homebrew Central</h2>
+                                        <p>Discover the best homebrew applications for your console</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="section-title"><i class="bi bi-fire"></i> Featured Games</h3>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3 mb-4" id="featuredGames"></div>
+
+            <h3 class="section-title"><i class="bi bi-stars"></i> Recent Homebrew</h3>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="recentHomebrew"></div>
+        </section>
+
+        <!-- Games Section -->
+        <section id="games-section" class="section-content d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0"><i class="bi bi-controller"></i> Nintendo 3DS Games</h2>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter="region-usa">USA</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter="region-eur">EUR</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter="region-jpn">JPN</button>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="gamesGrid"></div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" id="loadMoreGames">Load More</button>
+            </div>
+        </section>
+
+        <!-- DLC Section -->
+        <section id="dlc-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-plus-circle"></i> Downloadable Content</h2>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="dlcGrid"></div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" id="loadMoreDlc">Load More</button>
+            </div>
+        </section>
+
+        <!-- Apps Section -->
+        <section id="apps-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-app"></i> Applications</h2>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="appsGrid"></div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" id="loadMoreApps">Load More</button>
+            </div>
+        </section>
+
+        <!-- Virtual Console Section -->
+        <section id="virtual-console-section" class="section-content d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0"><i class="bi bi-joystick"></i> Virtual Console</h2>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-vc-filter="all">All</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="nes">NES</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="snes">SNES</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="gb">Game Boy</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="gbc">GBC</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="gba">GBA</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="n64">N64</button>
+                    <button type="button" class="btn btn-outline-primary" data-vc-filter="genesis">Genesis</button>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="virtualConsoleGrid"></div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" id="loadMoreVirtualConsole">Load More</button>
+            </div>
+        </section>
+
+        <!-- Homebrew Section -->
+        <section id="homebrew-section" class="section-content d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0"><i class="bi bi-code-square"></i> Homebrew Applications</h2>
+                <button class="btn btn-success" onclick="showSection('upload'); document.getElementById('titleCategory').value='homebrew'; document.getElementById('homebrewCategoryDiv').style.display='block';">
+                    <i class="bi bi-plus-lg"></i> Add Homebrew
+                </button>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="list-group" id="homebrewCategories">
+                        <a href="#" class="list-group-item list-group-item-action active" data-category="all">
+                            <i class="bi bi-grid-fill"></i> All Homebrew
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="emulators">
+                            <i class="bi bi-controller"></i> Emulators
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="utilities">
+                            <i class="bi bi-tools"></i> Utilities
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="games">
+                            <i class="bi bi-joystick"></i> Homebrew Games
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="themes">
+                            <i class="bi bi-palette"></i> Themes
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-category="tools">
+                            <i class="bi bi-wrench"></i> CFW Tools
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row row-cols-2 row-cols-md-3 g-3" id="homebrewGrid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hack Guide Section -->
+        <section id="guide-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-book"></i> 3DS Hacks Guide</h2>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 
+                This section integrates content from <a href="https://3ds.hacks.guide" target="_blank" class="alert-link">3ds.hacks.guide</a>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="list-group" id="guideNav">
+                        <a href="#" class="list-group-item list-group-item-action active" data-guide="getting-started">
+                            <i class="bi bi-play-circle"></i> Getting Started
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-guide="cfw-guide">
+                            <i class="bi bi-gear"></i> CFW Guide
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-guide="fbi-usage">
+                            <i class="bi bi-download"></i> Using FBI
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-guide="faq">
+                            <i class="bi bi-question-circle"></i> FAQ
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="card" id="guideContent">
+                        <div class="card-body" id="guideBody">
+                            <!-- Guide content loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seeds Section -->
+        <section id="seeds-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-key"></i> FBI Seeds</h2>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Seeds are required for some CIA files to run. FBI can import seeds from <code>sd:/fbi/seed/&lt;titleid&gt;.dat</code>
+            </div>
+            
+            <!-- Seed Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 id="totalSeeds">0</h3>
+                            <p class="text-muted mb-0">Available Seeds</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 id="seedDownloads">0</h3>
+                            <p class="text-muted mb-0">Downloads</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-primary me-2" onclick="refreshSeeds()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Seeds
+                    </button>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadSeeddbModal">
+                        <i class="bi bi-upload"></i> Upload seeddb.bin
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="seedSearch" placeholder="Search by Title ID...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seeds Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Title ID</th>
+                                    <th>Downloads</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seedsTableBody">
+                                <!-- Seeds populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center" id="seedsPagination"></ul>
+            </nav>
+        </section>
+
+        <!-- Upload Section -->
+        <section id="upload-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-cloud-upload"></i> Upload Files</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="uploadForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Title Name</label>
+                                    <input type="text" class="form-control" id="titleName" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Title ID</label>
+                                        <input type="text" class="form-control" id="titleId" placeholder="e.g., 0004000000030100">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Product Code</label>
+                                        <input type="text" class="form-control" id="productCode" placeholder="e.g., CTR-P-AGDE">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Category</label>
+                                        <select class="form-select" id="titleCategory" required>
+                                            <option value="game">Game</option>
+                                            <option value="dlc">DLC</option>
+                                            <option value="app">Application</option>
+                                            <option value="virtual-console">Virtual Console</option>
+                                            <option value="homebrew">Homebrew</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Region</label>
+                                        <select class="form-select" id="titleRegion">
+                                            <option value="region-usa">USA</option>
+                                            <option value="region-eur">EUR</option>
+                                            <option value="region-jpn">JPN</option>
+                                            <option value="region-global">Global</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3" id="homebrewCategoryDiv" style="display: none;">
+                                    <label class="form-label">Homebrew Category</label>
+                                    <select class="form-select" id="homebrewCategory">
+                                        <option value="emulators">Emulators</option>
+                                        <option value="utilities">Utilities</option>
+                                        <option value="games">Homebrew Games</option>
+                                        <option value="themes">Themes</option>
+                                        <option value="tools">CFW Tools</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="virtualConsoleCategoryDiv" style="display: none;">
+                                    <label class="form-label">Virtual Console System</label>
+                                    <select class="form-select" id="virtualConsoleCategory">
+                                        <option value="nes">NES</option>
+                                        <option value="snes">SNES</option>
+                                        <option value="gb">Game Boy</option>
+                                        <option value="gbc">Game Boy Color</option>
+                                        <option value="gba">Game Boy Advance</option>
+                                        <option value="n64">Nintendo 64</option>
+                                        <option value="genesis">Sega Genesis</option>
+                                        <option value="gamegear">Game Gear</option>
+                                        <option value="turbografx">TurboGrafx-16</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="titleDescription" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Uploaded By</label>
+                                    <input type="text" class="form-control" id="uploadedBy" placeholder="Your name">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">File (CIA, 3DSX, etc.)</label>
+                                    <input type="file" class="form-control" id="titleFile" accept=".cia,.3dsx,.3ds,.cia.zip">
+                                    <div class="form-text">Supported formats: CIA, 3DSX, 3DS</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Icon/Box Art (Optional)</label>
+                                    <input type="file" class="form-control" id="titleIcon" accept="image/*">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Upload Title
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-info-circle"></i> Upload Info</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-check-circle text-success"></i> CIA files for direct install</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success"></i> 3DSX homebrew apps</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Auto QR code generation</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Max file size: 5GB</li>
+                            </ul>
+                            <hr>
+                            <h6><i class="bi bi-folder"></i> Storage Paths</h6>
+                            <ul class="list-unstyled small text-muted">
+                                <li class="mb-1"><code>data/games/</code> - Game files</li>
+                                <li class="mb-1"><code>data/dlc/</code> - DLC content</li>
+                                <li class="mb-1"><code>data/apps/</code> - Applications</li>
+                                <li class="mb-1"><code>data/virtual-console/</code> - VC games</li>
+                                <li class="mb-1"><code>data/homebrew/</code> - Homebrew apps</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="mt-5 mb-3">Uploaded Files</h4>
+            <div class="table-responsive">
+                <table class="table table-hover" id="uploadedFilesTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Icon</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Uploaded By</th>
+                            <th>Downloads</th>
+                            <th>SHA256</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="uploadedFilesBody">
+                        <!-- Files populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Search Results Section -->
+        <section id="search-section" class="section-content d-none">
+            <h2 class="section-title"><i class="bi bi-search"></i> Search Results: "<span id="searchQuery"></span>"</h2>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="searchResults"></div>
+        </section>
+    </main>
+
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-qr-code"></i> QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="qrCodeContainer" class="mb-3"></div>
+                    <h5 id="qrTitleName" class="mb-2"></h5>
+                    <p class="text-muted mb-3" id="qrTitleId"></p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        Open <strong>FBI</strong> on your 3DS, go to <strong>Remote Install</strong> → <strong>Scan QR Code</strong>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" id="downloadQrBtn">
+                            <i class="bi bi-download"></i> Download QR Code
+                        </button>
+                        <button class="btn btn-outline-secondary" id="copyLinkBtn">
+                            <i class="bi bi-link-45deg"></i> Copy Direct Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Title Details Modal -->
+    <div class="modal fade" id="titleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitleName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <img id="modalTitleIcon" src="" class="img-fluid rounded mb-3" alt="Title Icon">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="modalDownloadBtn">
+                                    <i class="bi bi-download"></i> Download
+                                </button>
+                                <button class="btn btn-outline-primary" id="modalQrBtn">
+                                    <i class="bi bi-qr-code"></i> Show QR Code
+                                </button>
+                                <button class="btn btn-outline-success d-none" id="modalSeedBtn">
+                                    <i class="bi bi-key"></i> Get Seed
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <dl class="row">
+                                <dt class="col-sm-4">Title ID</dt>
+                                <dd class="col-sm-8" id="modalTitleId"></dd>
+                                <dt class="col-sm-4">Product Code</dt>
+                                <dd class="col-sm-8" id="modalProductCode"></dd>
+                                <dt class="col-sm-4">Category</dt>
+                                <dd class="col-sm-8" id="modalCategory"></dd>
+                                <dt class="col-sm-4">Region</dt>
+                                <dd class="col-sm-8" id="modalRegion"></dd>
+                                <dt class="col-sm-4">Size</dt>
+                                <dd class="col-sm-8" id="modalSize"></dd>
+                                <dt class="col-sm-4">Downloads</dt>
+                                <dd class="col-sm-8" id="modalDownloads"></dd>
+                                <dt class="col-sm-4">Uploaded By</dt>
+                                <dd class="col-sm-8" id="modalUploadedBy"></dd>
+                                <dt class="col-sm-4">SHA256</dt>
+                                <dd class="col-sm-8"><code id="modalSha256" style="word-break: break-all; font-size: 0.75rem;"></code></dd>
+                            </dl>
+                            <h6>Description</h6>
+                            <p id="modalDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notificationToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="bi bi-bell-fill me-2"></i>
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody"></div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-overlay d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Upload seeddb.bin Modal -->
+    <div class="modal fade" id="uploadSeeddbModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload"></i> Upload seeddb.bin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadSeeddbForm">
+                        <div class="mb-3">
+                            <label class="form-label">seeddb.bin file</label>
+                            <input type="file" class="form-control" id="seeddbFile" accept=".bin" required>
+                            <div class="form-text">Upload a seeddb.bin file to extract seeds</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Uploaded By</label>
+                            <input type="text" class="form-control" id="seeddbUploadedBy" placeholder="Your name">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Upload & Extract Seeds
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seed QR Modal -->
+    <div class="modal fade" id="seedQrModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-qr-code"></i> Seed QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="seedQrCodeContainer" class="mb-3"></div>
+                    <h5 id="seedQrTitleId" class="mb-2"></h5>
+                    <p class="text-muted small">FBI Path: <code id="seedFbiPath"></code></p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Scan with FBI: <strong>Remote Install</strong> → <strong>Scan QR Code</strong>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="downloadSeedDirect()">
+                            <i class="bi bi-download"></i> Download .dat File
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="copySeedLink()">
+                            <i class="bi bi-link-45deg"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Admin Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="loginUsername" placeholder="Enter username" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control" id="loginPassword" placeholder="Enter password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <div id="loginError" class="alert alert-danger d-none"></div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    <div class="text-center text-muted small">
+                        <p class="mb-1"><i class="bi bi-info-circle"></i> Admin access required for file management</p>
+                        <p class="mb-0">Default: <code>admin</code> / <code>admin123</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="bi bi-key"></i> Change Admin Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                        <div id="passwordError" class="alert alert-danger d-none"></div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-lg"></i> Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
